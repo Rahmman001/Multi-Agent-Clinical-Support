@@ -153,3 +153,4 @@ npm --prefix frontend run build
 * **Deterministic Priority**: LLM outputs never override safety rules. If Ollama is offline or generates invalid output, the system seamlessly falls back to the deterministic clinical summary.
 * **Urgency Ordering**: Emergent cardiac/electrolyte directives always precede routine monitoring.
 * **Client-side State Hygiene**: Directives checklist resets between patient records; custom uploads bypass remote GET lookups to prevent 404 races.
+* **Clinical UI System**: Hairline zinc borders (`1px solid #e2e8f0` / `#27272a`), surgical Dark/Light theme toggle, zero-layout-shift skeleton loaders, dynamic acute biomarker strip (creatinine delta %, potassium alerts), directives completion progress bar, and keyboard shortcuts (`/` search focus, `C` SOAP note copy).

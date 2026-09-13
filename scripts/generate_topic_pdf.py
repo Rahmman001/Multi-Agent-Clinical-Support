@@ -1402,6 +1402,194 @@ def build_topic_06_pdf():
     return pdf_path
 
 
+def build_topic_07_pdf():
+    pdf_path = COURSE_DIR / "Topic_07_Local_SLM_Inference_and_Fallbacks.pdf"
+    doc = SimpleDocTemplate(
+        str(pdf_path),
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = get_course_styles()
+    story = []
+
+    # Title Banner
+    story.append(Paragraph("AegisClinical Master Course", styles["subtitle"]))
+    story.append(
+        Paragraph("Topic 7: Local SLM Inference — Air-Gapped Ollama & Fallbacks", styles["title"])
+    )
+    story.append(
+        HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0284c7"), spaceAfter=14)
+    )
+
+    # Executive Abstract Callout
+    story.append(
+        create_callout_box(
+            "Healthcare privacy requires total air-gapping: no API keys, no telemetry, and zero outbound network calls. "
+            "In <code>src/agents.py</code>, AegisClinical queries a local Ollama instance running <code>llama3.2:3b</code> "
+            "using Python standard library <code>urllib</code>. If Ollama is offline or times out, the system seamlessly "
+            "falls back to authoritative deterministic rule summaries, guaranteeing 100% system availability.",
+            title="TOPIC OBJECTIVE",
+            color_hex="#0284c7",
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 1: The Analogy
+    story.append(Paragraph("1. The Real-World Analogy: The Court Reporter & The Judge", styles["h1"]))
+    story.append(
+        Paragraph(
+            "In a court of law, the <b>Judge</b> examines the statute book and delivers the formal legal verdict: "
+            "guilty or not guilty, sentence, and bail. The Judge represents AegisClinical's <b>Deterministic Rules Engine</b>.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "The <b>Court Reporter</b> sits next to the judge and transcribes the verdict into a concise, readable press briefing "
+            "for the public. The Reporter represents the <b>Local SLM (Ollama)</b>.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>The Golden Safety Rule:</b><br/>"
+            "• The Court Reporter is never allowed to change the Judge's verdict.<br/>"
+            "• If the Court Reporter's typewriter breaks or their pen runs out of ink (Ollama times out or model missing), "
+            "the Judge's official written ruling (the deterministic summary) still stands 100% authoritative.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    # Section 2: Zero-Dependency Bridge
+    story.append(Paragraph("2. The Zero-Dependency HTTP Bridge: <code>src/agents.py</code>", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Rather than requiring bloated SDKs (like the official OpenAI or LangChain community wrappers), "
+            "AegisClinical talks directly to the local Ollama REST daemon using standard library <code>urllib.request</code>:",
+            styles["body"],
+        )
+    )
+
+    bridge_code = (
+        "OLLAMA_ENDPOINT = 'http://localhost:11434/api/generate'<br/>"
+        "payload = {<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;'model': 'llama3.2:3b',<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;'prompt': prompt,<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;'system': 'You are an expert clinical decision support assistant.',<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;'stream': False,<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;'options': {'temperature': 0.2, 'top_p': 0.9}<br/>"
+        "}<br/>"
+        "req = urllib.request.Request(OLLAMA_ENDPOINT, data=json.dumps(payload).encode('utf-8'))<br/>"
+        "<b>with</b> urllib.request.urlopen(req, timeout=5.0) <b>as</b> resp:<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;result = json.loads(resp.read().decode('utf-8'))<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<b>return</b> result.get('response', '').strip()"
+    )
+
+    b_table = Table([[Paragraph(bridge_code, styles["code"])]], colWidths=[494])
+    b_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(b_table)
+    story.append(Spacer(1, 8))
+
+    # Section 3: Sampling & Fallbacks
+    story.append(Paragraph("3. Low Entropy Sampling & The Fail-Safe Fallback", styles["h1"]))
+    story.append(
+        Paragraph(
+            "• <b>Temperature = 0.2:</b> Most consumer LLM applications use temperature 0.7 for creative variety. "
+            "In medicine, variety is hazardous. Temperature 0.2 compresses the probability distribution, forcing the model "
+            "to select only high-confidence clinical tokens.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>The Fallback Guard:</b> On line 275 of <code>src/agents.py</code>, the system checks whether Ollama returned a valid string:",
+            styles["body"],
+        )
+    )
+
+    fb_code = "final_summary = llm_summary <b>if</b> (llm_summary <b>and</b> len(llm_summary) > 20) <b>else</b> deterministic_summary"
+    fb_table = Table([[Paragraph(f"<code>{fb_code}</code>", styles["code"])]], colWidths=[494])
+    fb_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(fb_table)
+    story.append(Spacer(1, 10))
+
+    # Section 4: Concrete Comparison
+    story.append(Paragraph("4. Concrete Output Comparison: Arthur Morales", styles["h1"]))
+
+    comp_table_data = [
+        [Paragraph("<b>Output Mode</b>", styles["h2"]), Paragraph("<b>Actual Text Rendered to Physician</b>", styles["h2"])],
+        [
+            Paragraph("<b>Ollama SLM Polish<br/>(llama3.2:3b)</b>", styles["body"]),
+            Paragraph("<i>'Arthur Morales presents with KDIGO Stage 2 AKI alongside severe hyperkalemia. He is on a contraindicated Triple Whammy combination (Lisinopril, Furosemide, Ibuprofen) which requires immediate cessation of the NSAID and urgent cardiac/electrolyte monitoring.'</i>", styles["body"]),
+        ],
+        [
+            Paragraph("<b>Deterministic Fallback<br/>(Ollama Offline)</b>", styles["body"]),
+            Paragraph("<i>'URGENT CLINICAL ALERT for Arthur Morales: High-priority clinical intervention required. Lab findings: KDIGO Stage 2 AKI (1.0 -> 2.4 mg/dL); Hyperkalemia (5.2 mEq/L). Pharmacological risk: Lisinopril, Furosemide, Ibuprofen (CONTRAINDICATED): Triple Whammy. Active comorbidities: Essential hypertension.'</i>", styles["body"]),
+        ],
+    ]
+    t_comp = Table(comp_table_data, colWidths=[130, 364])
+    t_comp.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t_comp)
+    story.append(Spacer(1, 8))
+
+    # Summary Callout
+    story.append(
+        KeepTogether(
+            create_callout_box(
+                "1. <b>Why is temperature set to 0.2 instead of 0.7?</b><br/>"
+                "To suppress token hallucination entropy and guarantee consistent, repeatable clinical summaries.<br/><br/>"
+                "2. <b>What happens if Ollama is not installed on the clinician's machine?</b><br/>"
+                "The engine continues running flawlessly, serving mathematically precise deterministic summaries with zero crashes.<br/><br/>"
+                "3. <b>Next Step in Topic 8:</b> Backend Architecture — FastAPI, Starlette Worker Threadpools, and DoS Mitigation.",
+                title="KNOWLEDGE CHECK & NEXT STEP",
+                color_hex="#059669",
+                bg_hex="#f0fdf4",
+            )
+        )
+    )
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Generated Topic 07 PDF at: {pdf_path}")
+    return pdf_path
+
+
 if __name__ == "__main__":
     build_topic_01_pdf()
     build_topic_02_pdf()
@@ -1409,6 +1597,8 @@ if __name__ == "__main__":
     build_topic_04_pdf()
     build_topic_05_pdf()
     build_topic_06_pdf()
+    build_topic_07_pdf()
+
 
 
 

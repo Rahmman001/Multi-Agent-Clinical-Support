@@ -138,15 +138,17 @@ Modern Electronic Health Records (EHRs) are dense, fragmented, and unstructured.
 
 ---
 
-## 7. Technical Considerations & Stack
+## 7. Technical Considerations & Stack (100% Free & Open-Source)
 
-| Layer | Technology | Rationale |
+> **Zero Credit Card Constraint**: All tools, libraries, models, and runtimes must be 100% free and open-source. No paid APIs or credit card-gated services.
+
+| Layer | Technology | Rationale & Cost |
 | :--- | :--- | :--- |
-| **Data Ingestion** | Synthea (JSON/FHIR) | Realistic synthetic records with zero PHI / privacy liabilities. |
-| **Agent Orchestration** | LangGraph (Python) | Explicit state graph, cycle management, parallel node execution. |
-| **Data Validation** | Pydantic v2 | Enforces rigid type checking, preventing hallucinated keys or types. |
-| **LLM Inference** | Gemini / OpenAI via LangChain | High-context reasoning with native JSON mode / structured outputs. |
-| **User Interface** | Streamlit or Next.js | Rapid, interactive clinical dashboard with immediate reactive state. |
+| **Data Ingestion** | Synthea (JSON/FHIR) | Open-source realistic synthetic patient records ($0, zero PHI risk). |
+| **LLM Inference** | **Ollama** (`llama3.2:3b` / `qwen2.5:7b`) | **100% Local & Free**. Runs on Apple Silicon / CPU. $0 cost, zero API keys, no credit card required. |
+| **Agent Orchestration** | LangGraph (Python) | Open-source state graph framework for cyclic & parallel multi-agent flows. |
+| **Data Validation** | Pydantic v2 | Open-source strict type and JSON schema validation. |
+| **User Interface** | Streamlit (Python) | Pure Python, open-source reactive web dashboard running on localhost. |
 
 ---
 
@@ -154,12 +156,13 @@ Modern Electronic Health Records (EHRs) are dense, fragmented, and unstructured.
 
 - **Zero Hallucinated Keys**: 100% of domain outputs strictly parse into Pydantic models.
 - **Critical Interaction Recall**: 100% detection rate on known synthetic test cases with lethal/severe drug interactions.
-- **Turnaround Time**: Full multi-agent evaluation completing in under 8 seconds per patient chart.
+- **Turnaround Time**: Full multi-agent evaluation completing in under 12 seconds on local Ollama inference.
 - **Doctor Cognitive Load**: Key clinical risks summarized in $<150$ words per patient card.
 
 ---
 
-## 9. Open Questions & Design Decisions
+## 9. Design Decisions & Zero-Cost Architecture
 
-1. **Dashboard framework preference**: Streamlit (fastest Python-native prototype) vs Next.js / React (enterprise frontend feel).
-2. **Local vs Cloud LLM**: Default to cloud API (Gemini/OpenAI) with option for local Ollama/vLLM for air-gapped clinical deployments.
+1. **Inference Engine**: Standardized on **Ollama** running locally on macOS. Alternative zero-cost fallback: Google AI Studio Gemini API free tier (which requires no credit card).
+2. **Dashboard UI**: Standardized on **Streamlit** to eliminate frontend JavaScript build complexity, keeping the entire codebase in unified, clean Python.
+

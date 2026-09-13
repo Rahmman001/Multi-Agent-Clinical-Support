@@ -62,14 +62,17 @@ Instead of one AI trying to do everything, the workload is distributed across sp
 
 ---
 
-## Architecture & Engineering Stack
+## Architecture & Engineering Stack (100% Free & Open-Source)
 
-| Layer | Implementation | Purpose |
+> **Zero Credit Card Required**: Every component in this architecture runs locally or uses generous, no-card-required open tiers.
+
+| Layer | Implementation | Purpose & Cost |
 | :--- | :--- | :--- |
-| **Input Data** | [Synthea](https://synthetichealth.github.io/synthea/) (JSON) | Free, realistic synthetic patient records with zero PHI/HIPAA liabilities. |
-| **Agent Logic** | LangGraph (Python) | Graph-based state machine with parallel execution and conditional routing. |
-| **Guardrails** | Pydantic v2 | Strict JSON schema validation preventing hallucinated keys or non-standard types. |
-| **Dashboard UI** | Streamlit / Next.js | Color-coded clinician triage view with alert badges and evidence inspection. |
+| **Data Ingestion** | [Synthea](https://synthetichealth.github.io/synthea/) (JSON) | 100% Free open-source synthetic EHR records (zero HIPAA/PHI risk). |
+| **LLM Inference** | **Ollama** (`llama3.2` / `qwen2.5`) | **100% Free & Local** (runs on your Mac GPU/CPU with $0 cost, zero API keys, zero credit card). |
+| **Agent Logic** | **LangGraph** (Python) | Free & open-source agent graph state machine with parallel node branching. |
+| **Guardrails** | **Pydantic v2** | Open-source JSON schema enforcement guaranteeing deterministic type output. |
+| **Dashboard UI** | **Streamlit** (Python) | Open-source, local web dashboard with color-coded risk alerts and drill-down cards. |
 
 ---
 

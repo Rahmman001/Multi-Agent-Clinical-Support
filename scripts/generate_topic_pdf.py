@@ -1041,11 +1041,209 @@ raw_labs.sort(key=lambda x: x.get("effective_datetime") or "")"""
     return pdf_path
 
 
+def build_topic_05_pdf():
+    pdf_path = COURSE_DIR / "Topic_05_Deterministic_Rules_KDIGO_and_DDI_Matrix.pdf"
+    doc = SimpleDocTemplate(
+        str(pdf_path),
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = get_course_styles()
+    story = []
+
+    # Title Banner
+    story.append(Paragraph("AegisClinical Master Course", styles["subtitle"]))
+    story.append(
+        Paragraph("Topic 5: The Deterministic Rules Engine — KDIGO AKI & Drug Matrices", styles["title"])
+    )
+    story.append(
+        HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0284c7"), spaceAfter=14)
+    )
+
+    # Executive Abstract Callout
+    story.append(
+        create_callout_box(
+            "In life-critical clinical decision support, non-deterministic generative models cannot be trusted with "
+            "diagnostic thresholding. In <code>src/rules.py</code>, AegisClinical implements mathematically verifiable "
+            "clinical guidelines: formal KDIGO 2012 Acute Kidney Injury staging, physiological lab panic thresholds, "
+            "and an O(1) set-intersection pharmacological interaction matrix that catches lethal contraindications.",
+            title="TOPIC OBJECTIVE",
+            color_hex="#0284c7",
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 1: The Analogies
+    story.append(Paragraph("1. The Real-World Analogies: Bridge Strain & The Garden Hose", styles["h1"]))
+
+    story.append(Paragraph("A. The Bridge Strain Gauge (KDIGO AKI)", styles["h2"]))
+    story.append(
+        Paragraph(
+            "Imagine a suspension bridge engineered for a baseline load of 100 tons (baseline creatinine = 1.0 mg/dL). "
+            "If heavy traffic increases the load to 150 tons (+50%, 1.5x ratio), the strain gauges sound an initial warning (<b>Stage 1 AKI</b>). "
+            "If the load surges to 240 tons (2.4x ratio), the support cables begin to tear (<b>Stage 2 AKI</b>). At 300+ tons, the structure collapses (<b>Stage 3 AKI</b>). "
+            "Engineers don't prompt a generative chatbot to guess the bridge's safety—they read hard strain sensors.",
+            styles["body"],
+        )
+    )
+
+    story.append(Paragraph("B. The Garden Hose Pressure Collapse (The Triple Whammy)", styles["h2"]))
+    story.append(
+        Paragraph(
+            "Imagine a garden hose with water flowing through to water a lawn (the kidney glomerulus):<br/>"
+            "• <b>1. The Diuretic</b> turns down the faucet at the house, reducing overall water volume in the hose.<br/>"
+            "• <b>2. The NSAID (Ibuprofen)</b> steps firmly on the hose at the entrance (afferent arteriole constriction via prostaglandin blockade).<br/>"
+            "• <b>3. The ACE-Inhibitor (Lisinopril)</b> opens the nozzle wide at the exit (efferent arteriole dilation via Angiotensin II blockade).<br/>"
+            "<b>The Result:</b> Filtration pressure inside the kidney drops to zero. Glomerular filtration ceases, and the patient goes into acute renal failure.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    # Section 2: Mathematical KDIGO AKI Staging
+    story.append(Paragraph("2. Mathematical KDIGO 2012 AKI Staging Algorithm", styles["h1"]))
+    story.append(
+        Paragraph(
+            "In <code>src/rules.py</code>, <code>evaluate_kdigo_aki(baseline_cr, current_cr)</code> implements "
+            "the internationally accepted KDIGO guidelines:",
+            styles["body"],
+        )
+    )
+
+    kdigo_data = [
+        [
+            Paragraph("<b>KDIGO Stage</b>", styles["h2"]),
+            Paragraph("<b>Mathematical Criteria</b>", styles["h2"]),
+            Paragraph("<b>Severity</b>", styles["h2"]),
+            Paragraph("<b>Mandatory Clinical Action</b>", styles["h2"]),
+        ],
+        [
+            Paragraph("<b>Stage 1</b>", styles["body"]),
+            Paragraph("Ratio >= 1.5x (within 7d) OR Delta >= +0.3 mg/dL (within 48h)", styles["body"]),
+            Paragraph("MODERATE", styles["code"]),
+            Paragraph("Review volume status, monitor fluids, discontinue nephrotoxins.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>Stage 2</b>", styles["body"]),
+            Paragraph("Ratio 2.0x to 2.9x baseline creatinine", styles["body"]),
+            Paragraph("HIGH", styles["code"]),
+            Paragraph("Urgent renal function review; stop all ACEI/ARBs, NSAIDs, and diuretics.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>Stage 3</b>", styles["body"]),
+            Paragraph("Ratio >= 3.0x baseline OR Current Cr >= 4.0 mg/dL with acute rise >= 0.5", styles["body"]),
+            Paragraph("CRITICAL", styles["code"]),
+            Paragraph("Immediate emergent nephrology consultation; prepare for potential dialysis.", styles["body"]),
+        ],
+    ]
+    t_kdigo = Table(kdigo_data, colWidths=[80, 180, 75, 159])
+    t_kdigo.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t_kdigo)
+    story.append(Spacer(1, 10))
+
+    # Section 3: O(1) Drug Interaction Matrix
+    story.append(Paragraph("3. The O(1) Drug Interaction Matrix", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Rather than doing quadratic O(N^2) pairwise comparisons, AegisClinical normalizes medication strings and checks "
+            "set intersections against pre-compiled pharmaceutical classes in <b>O(1) amortized time</b>:",
+            styles["body"],
+        )
+    )
+
+    ddi_code = """# Normalize strings: 'Lisinopril 20 MG Oral Tablet' -> 'lisinopril'
+norm = normalize_drug_name(raw_name)
+
+# Set intersection evaluates lethal combinations in O(1)
+matched_ace = normalized_set.intersection(ACE_ARBS)
+matched_diuretic = normalized_set.intersection(DIURETICS_LOOP_THIAZIDE)
+matched_nsaid = normalized_set.intersection(NSAIDS)
+
+if matched_ace and matched_diuretic and matched_nsaid:
+    # Trigger 'Triple Whammy' CONTRAINDICATED alert"""
+
+    c_table = Table([[Paragraph(f"<pre>{ddi_code}</pre>", styles["code"])]], colWidths=[494])
+    c_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(c_table)
+    story.append(Spacer(1, 8))
+
+    # Section 4: Concrete Scenarios
+    story.append(Paragraph("4. Concrete Patient Case Walkthroughs", styles["h1"]))
+
+    story.append(
+        Paragraph(
+            "<b>Case 1: Arthur Morales (Patient 01)</b><br/>"
+            "• Baseline Creatinine: 1.0 mg/dL | Current Creatinine: 2.4 mg/dL<br/>"
+            "• Math: Ratio = 2.4 / 1.0 = 2.4x -> <b>KDIGO Stage 2 AKI (HIGH)</b><br/>"
+            "• Medications: Lisinopril (ACE) + Furosemide (Diuretic) + Ibuprofen (NSAID) -> <b>Triple Whammy (CONTRAINDICATED)</b>",
+            styles["body"],
+        )
+    )
+
+    story.append(
+        Paragraph(
+            "<b>Case 2: Elena Rostova (Patient 02)</b><br/>"
+            "• Serum Potassium: 5.2 mEq/L (Normal high: 5.0) -> <b>Hyperkalemia Alert (HIGH)</b><br/>"
+            "• Medications: Losartan (ARB) + Spironolactone (Potassium-sparing Diuretic) -> <b>Dual Aldosterone Cascade Blockade (MAJOR)</b><br/>"
+            "• Directive: Discontinue spironolactone or adjust dose; order urgent ECG to inspect for cardiac arrhythmias.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    # Summary Callout
+    story.append(
+        KeepTogether(
+            create_callout_box(
+                "1. <b>Why is the 'Triple Whammy' classified as CONTRAINDICATED rather than MODERATE?</b><br/>"
+                "Because the simultaneous collapse of renal blood flow causes acute tubular necrosis requiring emergency intervention.<br/><br/>"
+                "2. <b>What is the computational complexity of the drug lookup matrix?</b><br/>"
+                "By hashing drug names into Python sets, intersection operations execute in O(1) amortized time, scaling to any formulary size.<br/><br/>"
+                "3. <b>Next Step in Topic 6:</b> LangGraph & State Contracts — Parallel Reducers with <code>operator.add</code>.",
+                title="KNOWLEDGE CHECK & NEXT STEP",
+                color_hex="#059669",
+                bg_hex="#f0fdf4",
+            )
+        )
+    )
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Generated Topic 05 PDF at: {pdf_path}")
+    return pdf_path
+
+
 if __name__ == "__main__":
     build_topic_01_pdf()
     build_topic_02_pdf()
     build_topic_03_pdf()
     build_topic_04_pdf()
+    build_topic_05_pdf()
+
 
 
 

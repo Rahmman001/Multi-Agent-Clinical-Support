@@ -1590,6 +1590,259 @@ def build_topic_07_pdf():
     return pdf_path
 
 
+def build_topic_08_pdf():
+    pdf_path = COURSE_DIR / "Topic_08_Backend_Architecture_FastAPI_and_Worker_Threadpools.pdf"
+    doc = SimpleDocTemplate(
+        str(pdf_path),
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = get_course_styles()
+    story = []
+
+    # Title Banner
+    story.append(Paragraph("AegisClinical Master Course", styles["subtitle"]))
+    story.append(
+        Paragraph("Topic 8: Backend Architecture — FastAPI, Threadpools, & DoS Guards", styles["title"])
+    )
+    story.append(
+        HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0284c7"), spaceAfter=14)
+    )
+
+    # Executive Abstract Callout
+    story.append(
+        create_callout_box(
+            "Serving clinical decision support systems requires balancing ultra-responsive web I/O with "
+            "computationally intensive graph execution. In <code>api.py</code>, FastAPI leverages Starlette's "
+            "asynchronous event loop and automatic worker threadpools to process clinical requests without "
+            "blocking concurrency, while enforcing strict 5MB payload caps and input sanitization to eliminate "
+            "Denial of Service (DoS) attack vectors.",
+            title="TOPIC OBJECTIVE",
+            color_hex="#0284c7",
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 1: The Analogy
+    story.append(Paragraph("1. The Real-World Analogy: The Maître D' & The Kitchen Brigade", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Imagine a bustling, Michelin-starred restaurant with hundreds of patrons arriving simultaneously:",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>The Maître D' (FastAPI Async Event Loop):</b> Stands at the front desk. Welcomes guests, verifies "
+            "reservations, hands out menus, and distributes bills. The Maître D' handles thousands of interactions "
+            "per hour because they never step into the kitchen to cook.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>The Kitchen Brigade (Starlette Worker Threadpool via <code>def</code> endpoints):</b> When a complex "
+            "meal is ordered (parsing a 400-resource FHIR bundle and executing LangGraph), the Maître D' slips the ticket "
+            "to the kitchen brigade. Dedicated chefs work on the ticket off to the side without blocking the front door.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>The Door Guard (DoS Mitigation & 5MB Payload Cap):</b> If an unruly visitor tries to haul a 100-ton "
+            "shipping container of raw uninspected food into the dining room (a multi-megabyte FHIR JSON bomb), the door guard "
+            "stops them instantly with <code>HTTP 413 (Payload Too Large)</code> before kitchen resources are consumed.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 2: Synchronous def vs. Asynchronous async def in FastAPI
+    story.append(Paragraph("2. Concurrency Architecture: The 'def' vs. 'async def' Dilemma", styles["h1"]))
+    story.append(
+        Paragraph(
+            "One of the most dangerous anti-patterns in Python asynchronous programming is running CPU-bound or synchronous "
+            "code inside an <code>async def</code> route handler. If you execute <code>clinical_graph.invoke()</code> inside "
+            "an <code>async def</code> function, Python's single-threaded event loop freezes completely until the graph finishes, "
+            "starving all other incoming HTTP requests.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "In <code>api.py</code>, AegisClinical declares compute-heavy endpoints using standard synchronous <code>def</code>:",
+            styles["body"],
+        )
+    )
+
+    code_snippet = (
+        "@app.post(\"/api/evaluate\")<br/>"
+        "<b>def</b> evaluate_custom_bundle(bundle: Dict[str, Any]):<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<i># FastAPI detects 'def' and automatically offloads execution to Starlette's threadpool</i><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;parsed_data = parse_synthea_bundle(bundle)<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<b>return</b> _evaluate_patient_data(parsed_data)"
+    )
+    t_code = Table([[Paragraph(f"<code>{code_snippet}</code>", styles["code"])]], colWidths=[494])
+    t_code.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(t_code)
+    story.append(Spacer(1, 10))
+
+    # Comparison Table
+    table_data = [
+        [Paragraph("<b>Route Definition</b>", styles["h2"]), Paragraph("<b>Execution Mechanism</b>", styles["h2"]), Paragraph("<b>Clinical Concurrency Impact</b>", styles["h2"])],
+        [
+            Paragraph("<b><code>async def</code></b><br/>with CPU-bound tasks", styles["body"]),
+            Paragraph("Runs directly on the primary asyncio event loop.", styles["body"]),
+            Paragraph("<b>CRITICAL ANTI-PATTERN:</b> Stalls entire server. Other clinicians experience UI freezes & timeouts.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>Standard <code>def</code></b><br/>(AegisClinical Pattern)", styles["body"]),
+            Paragraph("Offloaded to Starlette worker threadpool (<code>anyio.to_thread</code>).", styles["body"]),
+            Paragraph("<b>OPTIMAL:</b> Event loop remains 100% non-blocking; concurrent evaluations process across CPU cores.", styles["body"]),
+        ],
+    ]
+    t_threads = Table(table_data, colWidths=[120, 160, 214])
+    t_threads.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t_threads)
+    story.append(Spacer(1, 10))
+
+    # Section 3: DoS Protection & Memory Caps
+    story.append(Paragraph("3. Clinical DoS Mitigation: The 5MB Payload Guard", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Healthcare EHR exports can easily reach tens of megabytes of nested JSON. Without strict boundaries, "
+            "unauthenticated users or compromised endpoints could transmit massive JSON documents, triggering "
+            "Out-Of-Memory (OOM) killer terminations and service crashes.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "In <code>api.py</code> (line 130), AegisClinical guards the multipart file upload route with an immediate byte-size check:",
+            styles["body"],
+        )
+    )
+
+    dos_code = (
+        "@app.post(\"/api/upload\")<br/>"
+        "<b>def</b> upload_custom_bundle(file: UploadFile = File(...)):<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<i># Enforce strict 5MB ceiling before memory buffer allocation</i><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<b>if</b> file.size <b>and</b> file.size > 5_242_880:<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>raise</b> HTTPException(status_code=413, detail=\"File exceeds 5MB limit\")<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;contents = file.file.read()<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;bundle = json.loads(contents.decode(\"utf-8\"))<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<b>return</b> _evaluate_patient_data(parse_synthea_bundle(bundle))"
+    )
+    t_dos = Table([[Paragraph(f"<code>{dos_code}</code>", styles["code"])]], colWidths=[494])
+    t_dos.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(t_dos)
+    story.append(Spacer(1, 10))
+
+    # Section 4: Full Request-Response Flow
+    story.append(Paragraph("4. End-to-End Evaluation Request Pipeline", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Every evaluation follows a deterministic, memory-safe data transformation pipeline:",
+            styles["body"],
+        )
+    )
+
+    pipe_data = [
+        [Paragraph("<b>Step & Protocol</b>", styles["h2"]), Paragraph("<b>Component</b>", styles["h2"]), Paragraph("<b>Description & Guarantees</b>", styles["h2"])],
+        [
+            Paragraph("<b>1. Ingress & CORS</b><br/>HTTP POST", styles["body"]),
+            Paragraph("FastAPI Router<br/>(<code>CORSMiddleware</code>)", styles["body"]),
+            Paragraph("Validates origin headers, inspects <code>Content-Length</code>, routes to worker thread.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>2. Parsing</b><br/>In-Memory", styles["body"]),
+            Paragraph("FHIR Synthea Parser<br/>(<code>src/parser.py</code>)", styles["body"]),
+            Paragraph("Extracts creatinine trajectory, medications, and conditions into structured Python dict.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>3. Graph Exec</b><br/>Threadpool", styles["body"]),
+            Paragraph("LangGraph Engine<br/>(<code>src/graph.py</code>)", styles["body"]),
+            Paragraph("Executes scatter-gather evaluation across deterministic rules and local SLM agents.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>4. Serialization</b><br/>HTTP 200 OK", styles["body"]),
+            Paragraph("Pydantic Exporter<br/>(<code>.model_dump()</code>)", styles["body"]),
+            Paragraph("Converts strongly-typed domain models into sanitized JSON response payload.", styles["body"]),
+        ],
+    ]
+    t_pipe = Table(pipe_data, colWidths=[110, 130, 254])
+    t_pipe.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t_pipe)
+    story.append(Spacer(1, 10))
+
+    # Section 5: Knowledge Check & Next Step
+    story.append(
+        KeepTogether(
+            create_callout_box(
+                "1. <b>Why does AegisClinical use standard <code>def</code> instead of <code>async def</code> for evaluation routes?</b><br/>"
+                "Because LangGraph execution and FHIR parsing are synchronous CPU-bound operations. Using <code>def</code> instructs Starlette to execute them in background worker threadpools, keeping the main asyncio loop responsive.<br/><br/>"
+                "2. <b>How does the API prevent Denial-of-Service attacks from oversized FHIR bundles?</b><br/>"
+                "By enforcing an instantaneous 5MB (5,242,880 bytes) size check on file uploads, rejecting oversized payloads with HTTP 413 before memory buffers are consumed.<br/><br/>"
+                "3. <b>Next Step in Topic 9:</b> The Clinical Console — High-Density UI, Skeletons, and Race Conditions (React 19, CSS Tokens).",
+                title="KNOWLEDGE CHECK & NEXT STEP",
+                color_hex="#059669",
+                bg_hex="#f0fdf4",
+            )
+        )
+    )
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Generated Topic 08 PDF at: {pdf_path}")
+    return pdf_path
+
+
 if __name__ == "__main__":
     build_topic_01_pdf()
     build_topic_02_pdf()
@@ -1598,6 +1851,7 @@ if __name__ == "__main__":
     build_topic_05_pdf()
     build_topic_06_pdf()
     build_topic_07_pdf()
+    build_topic_08_pdf()
 
 
 

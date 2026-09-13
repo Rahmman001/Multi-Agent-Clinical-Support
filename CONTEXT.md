@@ -145,6 +145,12 @@ Runs Vite dev server on `http://localhost:5173` with proxy to backend on port 80
 npm --prefix frontend run build
 ```
 
+### 5. Compiling Course Topic PDFs
+```bash
+.venv/bin/python scripts/generate_topic_pdf.py
+```
+Compiles executive PDF course materials into `docs/course/`.
+
 ---
 
 ## 6. Key Design Decisions & Guarantees

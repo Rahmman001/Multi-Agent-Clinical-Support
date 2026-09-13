@@ -96,7 +96,6 @@ All clinical evaluation is implemented in [`src/rules.py`](src/rules.py) with ze
 ├── CODE_OF_CONDUCT.md       # Contributor Covenant v2.1
 ├── LICENSE                  # MIT Open Source License
 ├── api.py                  # FastAPI server providing /api/patients, /api/upload, and static mount
-├── app.py                  # Streamlit prototype (legacy fallback)
 ├── start.sh                # 1-click execution script (venv + dependencies + frontend build + server)
 ├── CONTEXT.md              # Project reference and system state (this file)
 ├── README.md               # User & open-source documentation

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from src.parser import parse_synthea_bundle
 from src.graph import clinical_graph
@@ -138,9 +139,6 @@ def upload_custom_bundle(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid FHIR JSON file: {str(e)}")
-
-
-from fastapi.staticfiles import StaticFiles
 
 # Mount built React frontend if dist exists
 dist_dir = Path(__file__).parent / "frontend" / "dist"

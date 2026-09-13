@@ -3,6 +3,7 @@
 > **An autonomous multi-specialty clinical intelligence team for electronic health records (EHR) powered by LangGraph, Local SLM (Ollama), and React.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI Pipeline](https://github.com/Rahmman001/Multi-Agent-Clinical-Support/actions/workflows/ci.yml/badge.svg)](https://github.com/Rahmman001/Multi-Agent-Clinical-Support/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![React 19](https://img.shields.io/badge/React-19.x-blue.svg)](https://react.dev/)
 [![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
@@ -144,15 +145,30 @@ A complete 10-topic master course and clinical translation guide are included in
 
 ---
 
-## 🤝 How to Contribute
+## 🤝 Contributing & Community
 
-Contributions are warmly welcome! To contribute:
+Contributions are warmly welcome from developers, clinicians, and researchers!
 
-1. **Fork** the repository.
-2. Create a feature branch (`git checkout -b feature/new-clinical-rule`).
-3. Commit your changes with clear messages (`git commit -m "feat: add QT-prolongation DDI rules"`).
-4. Verify tests pass (`pytest tests/ -v`).
-5. Push to your branch and open a **Pull Request**.
+* **Contributing Guide**: Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch strategies, neuro-symbolic design rules, and test requirements.
+* **Security Policy**: See [`SECURITY.md`](SECURITY.md) for vulnerability disclosure and HIPAA compliance guidelines.
+* **Code of Conduct**: We follow the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md).
+
+---
+
+## 📖 Citation
+
+If you use AegisClinical in your research, academic study, or clinical benchmarking, please cite:
+
+```bibtex
+@software{aegisclinical2026,
+  author = {Rahman},
+  title = {AegisClinical: Multi-Agent Clinical Decision Support System},
+  year = {2026},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/Rahmman001/Multi-Agent-Clinical-Support}
+}
+```
 
 ---
 
@@ -165,3 +181,4 @@ Contributions are warmly welcome! To contribute:
 ## 📄 License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+

@@ -88,7 +88,13 @@ All clinical evaluation is implemented in [`src/rules.py`](src/rules.py) with ze
 ## 4. Codebase Directory Map
 
 ```
-.
+├── .github/                # GitHub Actions CI/CD workflows and issue/PR templates
+│   ├── workflows/ci.yml    # Automated matrix pytest (Python 3.11/3.12) & React 19 build
+│   └── ISSUE_TEMPLATE/     # Bug reports & clinical rule proposal templates
+├── CONTRIBUTING.md          # Open-source developer & medical contributor guidelines
+├── SECURITY.md              # Vulnerability disclosure & HIPAA privacy compliance policy
+├── CODE_OF_CONDUCT.md       # Contributor Covenant v2.1
+├── LICENSE                  # MIT Open Source License
 ├── api.py                  # FastAPI server providing /api/patients, /api/upload, and static mount
 ├── app.py                  # Streamlit prototype (legacy fallback)
 ├── start.sh                # 1-click execution script (venv + dependencies + frontend build + server)

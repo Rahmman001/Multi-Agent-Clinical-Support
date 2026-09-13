@@ -362,5 +362,239 @@ def build_topic_01_pdf():
     return pdf_path
 
 
+def build_topic_02_pdf():
+    pdf_path = COURSE_DIR / "Topic_02_Multi_Agent_Architecture_and_Scatter_Gather.pdf"
+    doc = SimpleDocTemplate(
+        str(pdf_path),
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = get_course_styles()
+    story = []
+
+    # Title Banner
+    story.append(Paragraph("AegisClinical Master Course", styles["subtitle"]))
+    story.append(
+        Paragraph("Topic 2: Multi-Agent Architecture — Scatter-Gather vs. Monolithic LLM Prompts", styles["title"])
+    )
+    story.append(
+        HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0284c7"), spaceAfter=14)
+    )
+
+    # Executive Abstract Callout
+    story.append(
+        create_callout_box(
+            "Monolithic LLM prompts fail on clinical charts due to attention dilution, hallucination of lab numbers, "
+            "and inability to guarantee deterministic rules. AegisClinical solves this by decomposing clinical evaluation "
+            "into a Directed Acyclic Graph (DAG) using LangGraph. Three domain specialists execute concurrently, "
+            "accumulating findings through parallel state reducers before synchronizing at a Lead Triage Coordinator.",
+            title="TOPIC OBJECTIVE",
+            color_hex="#0284c7",
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 1
+    story.append(Paragraph("1. The Monolithic Prompt Fallacy: Why 'One Big Prompt' Fails", styles["h1"]))
+    story.append(
+        Paragraph(
+            "A common architectural mistake in medical AI prototypes is <b>Prompt Stuffing</b>: concatenating "
+            "the patient's entire 50-page record into a single prompt and asking: <i>'Find all medical issues.'</i> "
+            "In production environments, this fails catastrophically for three reasons:",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>Lost in the Middle:</b> Attention mechanisms in transformer models prioritize the beginning and end of long prompts. Critical middle tokens—such as a baseline creatinine test from six months ago—are routinely ignored.",
+            styles["bullet"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>Domain Interference:</b> Asking an LLM to simultaneously calculate creatinine percentage changes, cross-reference drug interaction databases, and code comorbidities leads to confabulation. It mixes past lab results with present ones.",
+            styles["bullet"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>Lack of Deterministic Verification:</b> You cannot unit test a prompt. A single prompt can never provide the mathematically verifiable guarantees required for clinical decision support.",
+            styles["bullet"],
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    # Section 2: Scatter-Gather Topology
+    story.append(Paragraph("2. The Scatter-Gather (Fan-Out / Fan-In) Architecture", styles["h1"]))
+    story.append(
+        Paragraph(
+            "AegisClinical organizes its evaluation pipeline as a <b>Directed Acyclic Graph (DAG)</b> using <b>LangGraph</b>. "
+            "The execution flow uses the <i>Scatter-Gather</i> pattern:",
+            styles["body"],
+        )
+    )
+
+    arch_data = [
+        [
+            Paragraph("<b>Phase</b>", styles["h2"]),
+            Paragraph("<b>Graph Node</b>", styles["h2"]),
+            Paragraph("<b>Operational Responsibility</b>", styles["h2"]),
+        ],
+        [
+            Paragraph("<b>1. INGESTION</b>", styles["body"]),
+            Paragraph("<code>parse_synthea_bundle</code>", styles["code"]),
+            Paragraph("Strips raw FHIR JSON into structured patient demography, time-series labs, medications, and conditions.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>2. SCATTER<br/>(Fan-Out)</b>", styles["body"]),
+            Paragraph("<code>lab_agent_node</code><br/><code>pharma_agent_node</code><br/><code>history_agent_node</code>", styles["code"]),
+            Paragraph("<b>Three parallel sub-agents</b> execute simultaneously on isolated state slices. Lab calculates KDIGO AKI; Pharma checks O(1) DDI hash tables; History normalizes chronic diagnoses.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>3. GATHER<br/>(Fan-In)</b>", styles["body"]),
+            Paragraph("<code>triage_coordinator_node</code>", styles["code"]),
+            Paragraph("Barrier synchronization point. Aggregates all alerts, computes composite priority (HIGH/MED/LOW), orders clinical directives, and triggers local SLM summary.", styles["body"]),
+        ],
+    ]
+    t = Table(arch_data, colWidths=[100, 160, 234])
+    t.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t)
+    story.append(Spacer(1, 10))
+
+    # Section 3: Concurrency without Race Conditions
+    story.append(Paragraph("3. Concurrency Without Race Conditions: The Reducer Pattern", styles["h1"]))
+    story.append(
+        Paragraph(
+            "When multiple agents execute concurrently in Python, naive dictionary updates would overwrite each other. "
+            "AegisClinical prevents this using <b>typing.Annotated</b> with <b>operator.add</b> reducers in <code>src/schemas.py</code>:",
+            styles["body"],
+        )
+    )
+
+    code_html = (
+        "<b>class</b> <font color='#0284c7'>ClinicalGraphState</font>(TypedDict):<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;patient_id: str<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;raw_labs: List[Dict[str, Any]]<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;raw_medications: List[Dict[str, Any]]<br/><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<font color='#64748b'># Parallel reducers: operator.add appends list deltas concurrently</font><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;lab_alerts: Annotated[List[LabAlert], <b>operator.add</b>]<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;drug_interactions: Annotated[List[DrugInteraction], <b>operator.add</b>]<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;chronic_conditions: Annotated[List[ChronicCondition], <b>operator.add</b>]<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;triage_assessment: Optional[TriageAssessment]"
+    )
+
+    code_table = Table([[Paragraph(code_html, styles["code"])]], colWidths=[494])
+    code_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(code_table)
+    story.append(
+        Paragraph(
+            "<b>How it works:</b> When <code>lab_agent_node</code> returns <code>{'lab_alerts': [Alert1]}</code>, "
+            "LangGraph does not overwrite the state. It uses <code>operator.add(state['lab_alerts'], [Alert1])</code>, "
+            "guaranteeing zero data loss and thread-safe execution across all concurrent branches.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    # Section 4: Execution Trace
+    story.append(Paragraph("4. Real-World Execution Trace: Arthur Morales", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Here is the exact lifecycle of Patient 01 (Arthur Morales) as it passes through the multi-agent graph:",
+            styles["body"],
+        )
+    )
+
+    trace_data = [
+        [
+            Paragraph("<b>Agent / Node</b>", styles["h2"]),
+            Paragraph("<b>Input Consumed</b>", styles["h2"]),
+            Paragraph("<b>Output Emitted to State</b>", styles["h2"]),
+        ],
+        [
+            Paragraph("<b>Lab Specialist</b>", styles["body"]),
+            Paragraph("Creatinine: 1.0 & 2.4; Potassium: 5.2", styles["body"]),
+            Paragraph("<code>LabAlert(KDIGO_AKI_STAGE_2, CRITICAL)</code>", styles["code"]),
+        ],
+        [
+            Paragraph("<b>Pharma Specialist</b>", styles["body"]),
+            Paragraph("Lisinopril + Furosemide + Ibuprofen", styles["body"]),
+            Paragraph("<code>DrugInteraction(Triple Whammy, CONTRAINDICATED)</code>", styles["code"]),
+        ],
+        [
+            Paragraph("<b>History Specialist</b>", styles["body"]),
+            Paragraph("Condition: Essential Hypertension (I10)", styles["body"]),
+            Paragraph("<code>ChronicCondition(I10, active)</code>", styles["code"]),
+        ],
+        [
+            Paragraph("<b>Lead Coordinator</b>", styles["body"]),
+            Paragraph("All alerts gathered from preceding 3 agents", styles["body"]),
+            Paragraph("<b>Priority: HIGH</b> (Directives: 1. Emergent ECG, 2. Stop NSAID)", styles["body"]),
+        ],
+    ]
+    t2 = Table(trace_data, colWidths=[110, 180, 204])
+    t2.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t2)
+    story.append(Spacer(1, 8))
+
+    # Summary Callout
+    story.append(
+        KeepTogether(
+            create_callout_box(
+                "1. <b>Why is Scatter-Gather superior to a sequential agent chain?</b><br/>"
+                "Parallel agents reduce evaluation latency from ~3 seconds to ~50ms and eliminate bias contamination between specialists.<br/><br/>"
+                "2. <b>What prevents state collisions when three agents write to state at once?</b><br/>"
+                "LangGraph's <code>Annotated[List[T], operator.add]</code> reducers append state changes rather than overwriting.<br/><br/>"
+                "3. <b>Next Step in Topic 3:</b> Healthcare Data Standards — Decentering FHIR R4, LOINC, and RxNorm ontologies.",
+                title="KNOWLEDGE CHECK & NEXT STEP",
+                color_hex="#059669",
+                bg_hex="#f0fdf4",
+            )
+        )
+    )
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Generated Topic 02 PDF at: {pdf_path}")
+    return pdf_path
+
+
 if __name__ == "__main__":
     build_topic_01_pdf()
+    build_topic_02_pdf()
+

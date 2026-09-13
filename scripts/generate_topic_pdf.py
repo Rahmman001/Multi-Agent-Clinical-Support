@@ -1237,12 +1237,179 @@ if matched_ace and matched_diuretic and matched_nsaid:
     return pdf_path
 
 
+def build_topic_06_pdf():
+    pdf_path = COURSE_DIR / "Topic_06_LangGraph_and_State_Contracts.pdf"
+    doc = SimpleDocTemplate(
+        str(pdf_path),
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = get_course_styles()
+    story = []
+
+    # Title Banner
+    story.append(Paragraph("AegisClinical Master Course", styles["subtitle"]))
+    story.append(
+        Paragraph("Topic 6: LangGraph & State Contracts — Parallel Reducers", styles["title"])
+    )
+    story.append(
+        HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0284c7"), spaceAfter=14)
+    )
+
+    # Executive Abstract Callout
+    story.append(
+        create_callout_box(
+            "Multi-agent coordination requires strict state contracts and race-free concurrency. "
+            "Using LangGraph (<code>src/graph.py</code>), AegisClinical compiles a Directed Acyclic Graph (DAG) "
+            "with fan-out parallel edges and a fan-in barrier synchronization. By defining state with "
+            "<code>typing.Annotated</code> and <code>operator.add</code> (<code>src/schemas.py</code>), "
+            "concurrent nodes append findings without write contention.",
+            title="TOPIC OBJECTIVE",
+            color_hex="#0284c7",
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 1: The Analogy
+    story.append(Paragraph("1. The Real-World Analogy: The Trauma Bay Whiteboard", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Imagine an Emergency Department Trauma Bay. When a critical patient arrives, three specialist physicians "
+            "rush to the bedside at the exact same moment: the <b>Lab Doctor</b>, the <b>Pharmacist</b>, and the <b>Medical Historian</b>.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>The Danger of a Single Pen (Race Condition):</b><br/>"
+            "If there is only one pen and one blank space on the whiteboard labeled <i>'Notes'</i>, each doctor will erase "
+            "what the previous doctor just wrote. The Pharmacist will overwrite the critical blood test numbers.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>The AegisClinical Solution (The Reducer Pattern):</b><br/>"
+            "Instead of a shared blank space, the Charge Nurse sets up three separate bulletin boards with sticky-note slots:<br/>"
+            "• The Lab Doctor pins her KDIGO AKI alert to the Lab Board.<br/>"
+            "• The Pharmacist pins his Triple Whammy alert to the Pharmacy Board.<br/>"
+            "• The Historian pins active hypertension to the History Board.<br/>"
+            "<b>The Synchronization Barrier:</b> The Head Trauma Surgeon (<code>triage_coordinator</code>) stands in the center "
+            "and does not make the final diagnosis until all three specialist boards have their notes posted.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    # Section 2: Building the Graph
+    story.append(Paragraph("2. Compiling the Graph: <code>src/graph.py</code>", styles["h1"]))
+    story.append(
+        Paragraph(
+            "LangGraph represents execution as a state machine with nodes and edges. Here is the entire graph compilation logic:",
+            styles["body"],
+        )
+    )
+
+    graph_code = (
+        "<b>def</b> <font color='#0284c7'>create_clinical_graph</font>():<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder = StateGraph(ClinicalGraphState)<br/><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<font color='#64748b'># 1. Register specialized agent nodes</font><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_node('lab_agent', lab_agent_node)<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_node('pharma_agent', pharma_agent_node)<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_node('history_agent', history_agent_node)<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_node('triage_coordinator', triage_coordinator_node)<br/><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<font color='#64748b'># 2. Scatter: Fan-out from START to 3 parallel agents</font><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_edge(START, 'lab_agent')<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_edge(START, 'pharma_agent')<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_edge(START, 'history_agent')<br/><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<font color='#64748b'># 3. Gather: Fan-in barrier to Lead Triage Coordinator</font><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_edge('lab_agent', 'triage_coordinator')<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_edge('pharma_agent', 'triage_coordinator')<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_edge('history_agent', 'triage_coordinator')<br/><br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;builder.add_edge('triage_coordinator', END)<br/>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;<b>return</b> builder.compile()"
+    )
+
+    g_table = Table([[Paragraph(graph_code, styles["code"])]], colWidths=[494])
+    g_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(g_table)
+    story.append(Spacer(1, 8))
+
+    # Section 3: State Contracts
+    story.append(Paragraph("3. The Pydantic Data Contracts: <code>src/schemas.py</code>", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Every item emitted by an agent is strictly typed via <b>Pydantic v2</b>. This prevents schema drift:",
+            styles["body"],
+        )
+    )
+
+    pydantic_summary = [
+        [Paragraph("<b>Model</b>", styles["h2"]), Paragraph("<b>Emitted By</b>", styles["h2"]), Paragraph("<b>Key Schema Fields</b>", styles["h2"])],
+        [Paragraph("<code>LabAlert</code>", styles["code"]), Paragraph("<code>lab_agent</code>", styles["body"]), Paragraph("<code>name, current_value, baseline_value, alert_type, severity</code>", styles["code"])],
+        [Paragraph("<code>DrugInteraction</code>", styles["code"]), Paragraph("<code>pharma_agent</code>", styles["body"]), Paragraph("<code>drugs, severity, mechanism, recommendation</code>", styles["code"])],
+        [Paragraph("<code>ChronicCondition</code>", styles["code"]), Paragraph("<code>history_agent</code>", styles["body"]), Paragraph("<code>code, display, status</code>", styles["code"])],
+        [Paragraph("<code>TriageAssessment</code>", styles["code"]), Paragraph("<code>triage_coordinator</code>", styles["body"]), Paragraph("<code>triage_level, summary, action_items</code>", styles["code"])],
+    ]
+    t_pyd = Table(pydantic_summary, colWidths=[110, 110, 274])
+    t_pyd.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t_pyd)
+    story.append(Spacer(1, 8))
+
+    # Summary Callout
+    story.append(
+        KeepTogether(
+            create_callout_box(
+                "1. <b>What does <code>builder.add_edge('lab_agent', 'triage_coordinator')</code> do?</b><br/>"
+                "It specifies that <code>triage_coordinator</code> must wait for <code>lab_agent</code> to complete before executing.<br/><br/>"
+                "2. <b>What is the role of Pydantic models vs. raw dictionaries?</b><br/>"
+                "Pydantic validates types at runtime, preventing malformed data (like string lab values or missing severity ratings) from entering clinical state.<br/><br/>"
+                "3. <b>Next Step in Topic 7:</b> Local SLM Inference — How we bridge to local Ollama with zero external dependencies and graceful fallbacks.",
+                title="KNOWLEDGE CHECK & NEXT STEP",
+                color_hex="#059669",
+                bg_hex="#f0fdf4",
+            )
+        )
+    )
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Generated Topic 06 PDF at: {pdf_path}")
+    return pdf_path
+
+
 if __name__ == "__main__":
     build_topic_01_pdf()
     build_topic_02_pdf()
     build_topic_03_pdf()
     build_topic_04_pdf()
     build_topic_05_pdf()
+    build_topic_06_pdf()
+
 
 
 

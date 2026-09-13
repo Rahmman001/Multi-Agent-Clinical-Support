@@ -819,9 +819,233 @@ def build_topic_03_pdf():
     return pdf_path
 
 
+def build_topic_04_pdf():
+    pdf_path = COURSE_DIR / "Topic_04_The_Ingestion_Parser_and_Lab_Trajectories.pdf"
+    doc = SimpleDocTemplate(
+        str(pdf_path),
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = get_course_styles()
+    story = []
+
+    # Title Banner
+    story.append(Paragraph("AegisClinical Master Course", styles["subtitle"]))
+    story.append(
+        Paragraph("Topic 4: The Ingestion Parser — Extracting Trajectories from FHIR Bundles", styles["title"])
+    )
+    story.append(
+        HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0284c7"), spaceAfter=14)
+    )
+
+    # Executive Abstract Callout
+    story.append(
+        create_callout_box(
+            "Before any multi-agent reasoning can take place, raw nested FHIR JSON must be parsed, stripped of "
+            "metadata envelopes, and normalized into clean clinical vectors. In <code>src/parser.py</code>, we implement "
+            "a zero-dependency parser that handles polymorphic inputs, normalizes dates across synthetic timelines, "
+            "and chronologically sorts lab observations to establish baseline-to-acute clinical trajectories.",
+            title="TOPIC OBJECTIVE",
+            color_hex="#0284c7",
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 1: The Analogy
+    story.append(Paragraph("1. The Real-World Analogy: The Airport Luggage Sorting Hub", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Imagine an international cargo jet lands and dumps thousands of mixed items onto a single chaotic conveyor belt. "
+            "Mixed together are passenger suitcases (Patient data), fragile blood sample vials (Observations), prescription pill bottles "
+            "(Medications), and doctor diagnostic letters (Conditions).",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>The Parser (<code>src/parser.py</code>) is the automated high-speed barcode scanner and robotic sorter:</b>",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>Strips Packaging Fluff:</b> Discards HTTP status codes, fullUrl UUID wrappers, and system metadata that agents don't need.",
+            styles["bullet"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>Sorts into Dedicated Carts:</b> Places labs onto the Lab Cart, pills onto the Pharmacy Cart, and diagnoses onto the History Cart.",
+            styles["bullet"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>Lines Up the Timeline:</b> Organizes lab sample vials in chronological order from oldest to newest, so doctors can instantly spot whether kidney function is worsening over time.",
+            styles["bullet"],
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    # Section 2: Technical Design Decisions
+    story.append(Paragraph("2. Technical Design Decisions in <code>src/parser.py</code>", styles["h1"]))
+
+    story.append(Paragraph("A. Polymorphic Ingestion (CLI & Web Unified)", styles["h2"]))
+    story.append(
+        Paragraph(
+            "The parser accepts file paths (<code>str</code> or <code>pathlib.Path</code>) or pre-loaded in-memory dictionaries. "
+            "This enables offline CLI testing and real-time FastAPI web uploads (<code>/api/upload</code>) to share the exact same code path "
+            "with zero overhead:",
+            styles["body"],
+        )
+    )
+
+    poly_snippet = """def parse_synthea_bundle(source: Union[str, Path, Dict[str, Any]]) -> Dict[str, Any]:
+    if isinstance(source, (str, Path)):
+        with open(source, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    elif isinstance(source, dict):
+        data = source"""
+
+    p_table = Table([[Paragraph(f"<pre>{poly_snippet}</pre>", styles["code"])]], colWidths=[494])
+    p_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(p_table)
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("B. The Chronological Sorting Mechanism", styles["h2"]))
+    story.append(
+        Paragraph(
+            "A patient's FHIR bundle may contain lab tests in random order. To calculate <b>KDIGO Acute Kidney Injury</b>, "
+            "we must know what the patient's creatinine was <i>before</i> (baseline) versus <i>today</i> (current presentation). "
+            "On line 156, the parser sorts all observations by ISO-8601 timestamp:",
+            styles["body"],
+        )
+    )
+
+    sort_snippet = """# Sort labs chronologically so history/deltas are easy to trace
+raw_labs.sort(key=lambda x: x.get("effective_datetime") or "")"""
+
+    s_table = Table([[Paragraph(f"<pre>{sort_snippet}</pre>", styles["code"])]], colWidths=[494])
+    s_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(s_table)
+    story.append(Spacer(1, 10))
+
+    # Section 3: Concrete Walkthrough
+    story.append(Paragraph("3. Concrete Example: Arthur Morales (Input vs. Output)", styles["h1"]))
+    story.append(
+        Paragraph(
+            "Here is how Arthur Morales's raw FHIR bundle is transformed into the clean Python state dictionary:",
+            styles["body"],
+        )
+    )
+
+    comp_data = [
+        [
+            Paragraph("<b>Raw FHIR JSON (Input)</b>", styles["h2"]),
+            Paragraph("<b>Normalized Parser Output (Python Dict)</b>", styles["h2"]),
+        ],
+        [
+            Paragraph(
+                "<code>{<br/>"
+                "&nbsp;&nbsp;'resourceType': 'Observation',<br/>"
+                "&nbsp;&nbsp;'code': {'coding': [{'code': '2160-0'}]},<br/>"
+                "&nbsp;&nbsp;'effectiveDateTime': '2026-09-08',<br/>"
+                "&nbsp;&nbsp;'valueQuantity': {'value': 1.0}<br/>"
+                "}<br/>"
+                "{<br/>"
+                "&nbsp;&nbsp;'resourceType': 'Observation',<br/>"
+                "&nbsp;&nbsp;'code': {'coding': [{'code': '2160-0'}]},<br/>"
+                "&nbsp;&nbsp;'effectiveDateTime': '2026-09-12',<br/>"
+                "&nbsp;&nbsp;'valueQuantity': {'value': 2.4}<br/>"
+                "}</code>",
+                styles["code"],
+            ),
+            Paragraph(
+                "<code>'raw_labs': [<br/>"
+                "&nbsp;&nbsp;{<br/>"
+                "&nbsp;&nbsp;&nbsp;&nbsp;'name': 'Serum Creatinine',<br/>"
+                "&nbsp;&nbsp;&nbsp;&nbsp;'code': '2160-0',<br/>"
+                "&nbsp;&nbsp;&nbsp;&nbsp;'value': 1.0,<br/>"
+                "&nbsp;&nbsp;&nbsp;&nbsp;'effective_datetime': '2026-09-08'<br/>"
+                "&nbsp;&nbsp;},<br/>"
+                "&nbsp;&nbsp;{<br/>"
+                "&nbsp;&nbsp;&nbsp;&nbsp;'name': 'Serum Creatinine',<br/>"
+                "&nbsp;&nbsp;&nbsp;&nbsp;'code': '2160-0',<br/>"
+                "&nbsp;&nbsp;&nbsp;&nbsp;'value': 2.4,<br/>"
+                "&nbsp;&nbsp;&nbsp;&nbsp;'effective_datetime': '2026-09-12'<br/>"
+                "&nbsp;&nbsp;}<br/>"
+                "]</code>",
+                styles["code"],
+            ),
+        ],
+    ]
+    t_comp = Table(comp_data, colWidths=[240, 254])
+    t_comp.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t_comp)
+    story.append(Spacer(1, 10))
+
+    # Summary Callout
+    story.append(
+        KeepTogether(
+            create_callout_box(
+                "1. <b>Why is chronological sorting mandatory for AKI detection?</b><br/>"
+                "Because KDIGO AKI math compares baseline creatinine (oldest test) against acute presentation (newest test). Unsorted labs lead to inverted ratios.<br/><br/>"
+                "2. <b>Why avoid third-party FHIR SDK libraries?</b><br/>"
+                "Following the Ponytail principle: Python's standard library <code>json</code> parses the exact 4 resources we need in 150 lines without bloated external dependencies.<br/><br/>"
+                "3. <b>Next Step in Topic 5:</b> The Deterministic Rules Engine — Mathematical KDIGO AKI Staging and the Triple Whammy Interaction Matrix.",
+                title="KNOWLEDGE CHECK & NEXT STEP",
+                color_hex="#059669",
+                bg_hex="#f0fdf4",
+            )
+        )
+    )
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Generated Topic 04 PDF at: {pdf_path}")
+    return pdf_path
+
+
 if __name__ == "__main__":
     build_topic_01_pdf()
     build_topic_02_pdf()
     build_topic_03_pdf()
+    build_topic_04_pdf()
+
 
 

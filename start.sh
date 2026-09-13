@@ -10,8 +10,8 @@ if [ ! -d ".venv" ]; then
     echo "Creating virtual environment..."
     python3 -m venv .venv
     .venv/bin/pip install --upgrade pip
-    .venv/bin/pip install -r requirements.txt
 fi
+.venv/bin/pip install -q -r requirements.txt
 
 # Build frontend if dist does not exist
 if [ ! -d "frontend/dist" ]; then

@@ -42,22 +42,40 @@ export default function App() {
       .catch((err) => setError(err.message));
   }, []);
 
+  const selectPatient = (p) => {
+    setSelectedId(p.id);
+    setCheckedDirectives({});
+    if (p.evaluatedData) {
+      setPatientData(p.evaluatedData);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId || selectedId.startsWith('custom_')) return;
+    setCheckedDirectives({});
     setLoading(true);
+    let active = true;
+
     fetch(`/api/patients/${selectedId}`)
       .then((res) => {
         if (!res.ok) throw new Error('Evaluation failed');
         return res.json();
       })
       .then((data) => {
+        if (!active) return;
         setPatientData(data);
         setLoading(false);
       })
       .catch((err) => {
+        if (!active) return;
         setError(err.message);
         setLoading(false);
       });
+
+    return () => {
+      active = false;
+    };
   }, [selectedId]);
 
   const handleFileUpload = async (e) => {
@@ -89,9 +107,11 @@ export default function App() {
         gender: data.gender || 'unknown',
         summary: `Custom Bundle (${data.triage_assessment?.triage_level || 'EVAL'})`,
         priority: data.triage_assessment?.triage_level || 'MEDIUM',
+        evaluatedData: data,
       };
       setPatients((prev) => [customPatient, ...prev]);
       setSelectedId(customPatient.id);
+      setCheckedDirectives({});
       showToast('Custom FHIR R4 Bundle evaluated');
     } catch (err) {
       setError(err.message);
@@ -197,7 +217,7 @@ export default function App() {
               <div
                 key={p.id}
                 className={`patient-row ${isSelected ? 'active' : ''}`}
-                onClick={() => setSelectedId(p.id)}
+                onClick={() => selectPatient(p)}
               >
                 <div className="p-row-top">
                   <span className="p-name">{p.name}</span>

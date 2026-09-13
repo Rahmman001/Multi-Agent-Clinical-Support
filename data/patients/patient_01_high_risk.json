@@ -101,7 +101,7 @@
           "text": "Serum Creatinine"
         },
         "subject": { "reference": "urn:uuid:patient-01" },
-        "effectiveDateTime": "2026-06-01T08:00:00Z",
+        "effectiveDateTime": "2026-09-08T08:00:00Z",
         "valueQuantity": {
           "value": 1.0,
           "unit": "mg/dL",

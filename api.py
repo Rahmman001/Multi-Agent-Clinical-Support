@@ -125,13 +125,17 @@ def evaluate_custom_bundle(bundle: Dict[str, Any]):
 
 
 @app.post("/api/upload")
-async def upload_custom_bundle(file: UploadFile = File(...)):
+def upload_custom_bundle(file: UploadFile = File(...)):
     """Upload a custom Synthea FHIR R4 JSON file and evaluate."""
+    if file.size and file.size > 5_242_880:
+        raise HTTPException(status_code=413, detail="File exceeds 5MB limit")
     try:
-        contents = await file.read()
+        contents = file.file.read()
         bundle = json.loads(contents.decode("utf-8"))
         parsed_data = parse_synthea_bundle(bundle)
         return _evaluate_patient_data(parsed_data)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid FHIR JSON file: {str(e)}")
 

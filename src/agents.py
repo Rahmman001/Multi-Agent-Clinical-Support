@@ -214,23 +214,26 @@ def triage_coordinator_node(state: Dict[str, Any]) -> Dict[str, Any]:
     else:
         triage_level = "LOW"
 
-    # 2. Formulate Action Items
+    # 2. Formulate Action Items (ordered by clinical urgency)
     action_items: List[str] = []
 
-    # Add DDI recommendations
+    # Priority 1: Emergent electrolyte and acute hematologic interventions
+    for lab in lab_alerts:
+        if lab.severity in ("CRITICAL", "HIGH"):
+            if "potassium" in lab.name.lower():
+                action_items.append("ELECTROLYTE ALERT: Order emergent 12-lead ECG to evaluate for peaked T waves / arrhythmias.")
+            elif "hemoglobin" in lab.name.lower():
+                action_items.append("HEMATOLOGY ALERT: Type and crossmatch; evaluate for active hemorrhage.")
+
+    # Priority 2: Critical medication contraindications and interactions
     for ddi in drug_interactions:
         if ddi.severity in ("CONTRAINDICATED", "MAJOR"):
             action_items.append(f"MEDICATION ALERT: {ddi.recommendation}")
 
-    # Add Lab alerts
+    # Priority 3: Organ function monitoring and repeat labs
     for lab in lab_alerts:
-        if lab.severity in ("CRITICAL", "HIGH"):
-            if "KDIGO" in lab.alert_type:
-                action_items.append(f"RENAL MONITORING: Repeat serum creatinine and BUN within 24-48h; check daily urine output.")
-            elif "potassium" in lab.name.lower():
-                action_items.append(f"ELECTROLYTE ALERT: Order emergent 12-lead ECG to evaluate for peaked T waves / arrhythmias.")
-            elif "hemoglobin" in lab.name.lower():
-                action_items.append(f"HEMATOLOGY ALERT: Type and crossmatch; evaluate for active hemorrhage.")
+        if lab.severity in ("CRITICAL", "HIGH") and "KDIGO" in lab.alert_type:
+            action_items.append("RENAL MONITORING: Repeat serum creatinine and BUN within 24-48h; check daily urine output.")
 
     if not action_items:
         action_items.append("Continue current outpatient management; routine follow-up recommended.")
@@ -247,7 +250,7 @@ def triage_coordinator_node(state: Dict[str, Any]) -> Dict[str, Any]:
         )
     else:
         summary_parts.append(
-            f"ROUTINE STABLE ASSESSMENT for {patient_name}: Normal vital findings and stable baseline."
+            f"ROUTINE STABLE ASSESSMENT for {patient_name}: No acute lab abnormalities or contraindications detected."
         )
 
     if lab_alerts:

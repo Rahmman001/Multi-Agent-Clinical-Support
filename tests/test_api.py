@@ -28,3 +28,17 @@ def test_evaluate_patient_01():
     assert data["triage_assessment"]["triage_level"] == "HIGH"
     assert len(data["drug_interactions"]) >= 1
     assert len(data["lab_alerts"]) >= 1
+
+
+def test_upload_bundle():
+    with open("data/patients/patient_03_low_risk.json", "rb") as f:
+        response = client.post("/api/upload", files={"file": ("test.json", f, "application/json")})
+    assert response.status_code == 200
+    assert response.json()["patient_name"] == "James Chen"
+
+
+def test_upload_bundle_too_large():
+    fake_large = b"x" * (5_242_881)
+    response = client.post("/api/upload", files={"file": ("large.json", fake_large, "application/json")})
+    assert response.status_code == 413
+

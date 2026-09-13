@@ -1,0 +1,263 @@
+{
+  "resourceType": "Bundle",
+  "id": "bundle-patient-01-high-risk",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:patient-01",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-01",
+        "name": [
+          {
+            "use": "official",
+            "family": "Morales",
+            "given": ["Arthur"]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1958-04-12"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-01-1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-01-1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "I10",
+              "display": "Essential (primary) hypertension"
+            }
+          ],
+          "text": "Essential hypertension"
+        },
+        "subject": { "reference": "urn:uuid:patient-01" },
+        "recordedDate": "2019-03-15"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-01-2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-01-2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus without complications"
+            }
+          ],
+          "text": "Type 2 Diabetes Mellitus"
+        },
+        "subject": { "reference": "urn:uuid:patient-01" },
+        "recordedDate": "2020-08-20"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-01-baseline-cr",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-01-baseline-cr",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2160-0",
+              "display": "Creatinine [Mass/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "Serum Creatinine"
+        },
+        "subject": { "reference": "urn:uuid:patient-01" },
+        "effectiveDateTime": "2026-06-01T08:00:00Z",
+        "valueQuantity": {
+          "value": 1.0,
+          "unit": "mg/dL",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/dL"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-01-current-cr",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-01-current-cr",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2160-0",
+              "display": "Creatinine [Mass/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "Serum Creatinine"
+        },
+        "subject": { "reference": "urn:uuid:patient-01" },
+        "effectiveDateTime": "2026-09-12T14:30:00Z",
+        "valueQuantity": {
+          "value": 2.4,
+          "unit": "mg/dL",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/dL"
+        },
+        "referenceRange": [
+          {
+            "low": { "value": 0.7, "unit": "mg/dL" },
+            "high": { "value": 1.3, "unit": "mg/dL" }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-01-k",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-01-k",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2823-3",
+              "display": "Potassium [Moles/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "Serum Potassium"
+        },
+        "subject": { "reference": "urn:uuid:patient-01" },
+        "effectiveDateTime": "2026-09-12T14:30:00Z",
+        "valueQuantity": {
+          "value": 5.2,
+          "unit": "mEq/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "meq/L"
+        },
+        "referenceRange": [
+          {
+            "low": { "value": 3.5, "unit": "mEq/L" },
+            "high": { "value": 5.0, "unit": "mEq/L" }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-01-1",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-01-1",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "314076",
+              "display": "Lisinopril 20 MG Oral Tablet"
+            }
+          ],
+          "text": "Lisinopril 20 MG"
+        },
+        "subject": { "reference": "urn:uuid:patient-01" },
+        "authoredOn": "2026-01-10"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-01-2",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-01-2",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "200801",
+              "display": "Furosemide 40 MG Oral Tablet"
+            }
+          ],
+          "text": "Furosemide 40 MG"
+        },
+        "subject": { "reference": "urn:uuid:patient-01" },
+        "authoredOn": "2026-05-14"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-01-3",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-01-3",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "197806",
+              "display": "Ibuprofen 600 MG Oral Tablet"
+            }
+          ],
+          "text": "Ibuprofen 600 MG"
+        },
+        "subject": { "reference": "urn:uuid:patient-01" },
+        "authoredOn": "2026-09-08"
+      }
+    }
+  ]
+}

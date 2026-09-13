@@ -52,13 +52,14 @@ Modern Electronic Health Records (EHRs) are dense, fragmented, and unstructured.
 
 ## 4. User Stories
 
-### US-001: Synthetic Patient Data Ingestion & Parser
-**Description:** As a developer, I want a pipeline that loads Synthea-generated patient JSON records so that domain agents receive clean, pre-partitioned clinical data.
+### US-001: Synthetic Patient Data Ingestion & Parser (Stdlib First)
+**Description:** As a developer, I want a lightweight parser that loads Synthea-generated patient JSON records without heavy third-party FHIR dependencies so that domain agents receive clean clinical dictionaries.
 
 **Acceptance Criteria:**
-- [ ] Ingestion script parses Synthea JSON / FHIR-bundle files into structured dictionaries: `labs`, `medications`, `conditions`, `vitals`, and `notes`.
-- [ ] Schema validation rejects malformed patient records with descriptive errors.
-- [ ] Project quality checks pass (tests, lint).
+- [ ] Ingestion script uses Python stdlib `json` + simple dict navigation (zero bloated FHIR packages).
+- [ ] Extracts key resources into structured lists: `labs`, `medications`, `conditions`, and `patient_info`.
+- [ ] Rejects malformed records with clear validation errors.
+- [ ] Unit tests verify extraction of normal and abnormal patient records.
 
 ---
 
@@ -73,14 +74,14 @@ Modern Electronic Health Records (EHRs) are dense, fragmented, and unstructured.
 
 ---
 
-### US-003: Pharmacology & Drug-Drug Interaction Agent
-**Description:** As a clinician, I want a Pharma Agent that cross-references active prescriptions with drug databases so that dangerous contraindications are flagged.
+### US-003: Pharmacology & Drug-Drug Interaction Agent (Local Rule Dict + LLM)
+**Description:** As a clinician, I want a Pharma Agent that cross-references active prescriptions against known lethal contraindications using an instant local rules lookup table with local LLM fallback.
 
 **Acceptance Criteria:**
-- [ ] Pharma Agent extracts all active medications, dosages, and administration routes.
-- [ ] Cross-references drug pairs against known contraindication rules (e.g., NSAIDs + ACE inhibitors + Diuretics, or Warfarin + Aspirin).
+- [ ] In-memory Python rule dictionary checks high-risk combos in $O(1)$ (Triple Whammy: ACEi + Diuretic + NSAID; Anticoagulant + NSAID; Spironolactone + ACEi).
+- [ ] Local Ollama model acts as fallback for nuanced/unstructured medication instructions.
 - [ ] Outputs structured Pydantic model: interacting drug pair, severity (Major, Moderate, Minor), mechanism, and recommendation.
-- [ ] Project quality checks pass.
+- [ ] Zero external network calls or third-party paid API dependencies.
 
 ---
 
@@ -107,15 +108,15 @@ Modern Electronic Health Records (EHRs) are dense, fragmented, and unstructured.
 
 ---
 
-### US-006: Doctor Triage Dashboard UI
-**Description:** As an attending physician, I want an interactive, color-coded triage screen where I can select a patient, view their triage risk badge, and inspect the itemized evidence card.
+### US-006: Doctor Triage Dashboard UI (Pure Streamlit)
+**Description:** As an attending physician, I want an interactive, color-coded triage screen built purely in Streamlit so I can select a patient, view their triage risk badge, and inspect the itemized evidence card without frontend build complexity.
 
 **Acceptance Criteria:**
-- [ ] Patient selection selector allowing switching between patient cases.
+- [ ] `st.sidebar.radio` patient triage queue with native arrow-key navigation.
 - [ ] Prominent risk alert banner (Red = High, Yellow = Medium, Green = Low).
 - [ ] Three modular panels: Lab Alerts, Drug Contraindications, Chronic Context.
-- [ ] Collapsible "Raw Agent Evidence" tab displaying the JSON schema response.
-- [ ] Verify in browser using `dev-browser` skill.
+- [ ] Collapsible `st.expander` displaying the verified Pydantic JSON state.
+- [ ] Runs with a single command: `streamlit run app.py`.
 
 ---
 

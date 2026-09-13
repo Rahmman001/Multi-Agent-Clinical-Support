@@ -152,41 +152,64 @@ The dashboard is organized into three distinct visual regions:
 
 ---
 
-## 5. Micro-Interactions & Animation (Restrained & Functional)
+## 5. Streamlit-Native Layout & Ergonomics (Zero-Hack Architecture)
 
-- **Status Beacon Pulse**: A slow, rhythmic 2.4s pulse on High-Risk badges to draw immediate visual attention without inducing panic.
-  ```css
-  @keyframes beacon-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-    70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-  }
-  ```
-- **Numeric Transition**: Monospace numeric values fade in with a crisp 120ms ease-out on patient switch.
-- **Collapsible Disclosure**: Smooth 200ms height transition using CSS grid `grid-template-rows: 0fr -> 1fr`.
-- **Hardware Acceleration**: Only `opacity` and `transform` are animated; zero layout thrashing or CPU-heavy canvas re-renders.
+Rather than fighting Streamlit's virtual DOM with fragile injected JavaScript listeners, the interface uses **native Streamlit primitives styled with clean CSS tokens**:
+
+```python
+# Minimalist, bulletproof Streamlit layout
+import streamlit as st
+
+st.set_page_config(page_title="Clinical Triage OS", layout="wide", initial_sidebar_state="expanded")
+
+# Left Rail: 1-line native patient queue with instant arrow-key navigation
+patient_id = st.sidebar.radio(
+    "Patient Triage Queue",
+    options=patient_list,
+    format_func=lambda p: f"{p['risk_emoji']} {p['name']} ({p['summary_tag']})"
+)
+
+# Top Hero: Status Banner
+st.markdown(f"<div class='triage-banner {patient['risk_class']}'>{patient['risk_badge']} {patient['risk_label']}</div>", unsafe_allow_html=True)
+
+# 3-Column Bento Evidence Cards
+col1, col2, col3 = st.columns([4, 4, 3])
+with col1:
+    st.subheader("🔬 Lab Anomalies")
+    st.dataframe(patient['lab_df'], use_container_width=True)
+with col2:
+    st.subheader("💊 Drug Interactions")
+    st.markdown(patient['ddi_html'], unsafe_allow_html=True)
+with col3:
+    st.subheader("📋 Comorbidities")
+    st.write(patient['chronic_conditions'])
+
+# Collapsible Raw Provenance: Native st.expander
+with st.expander("🔍 Inspect Verified JSON State"):
+    st.json(patient['raw_state'])
+```
 
 ---
 
 ## 6. Accessibility & Safety Guardrails (WCAG 2.1 AAA)
 
-1. **Colorblind-Safe Palettes**: All status colors have distinctive brightness curves. Red, Amber, and Green differ in value and saturation, and are always backed by symbols:
-   - High Risk: `▲` (Upward Triangle / Exclamation)
-   - Medium Risk: `◆` (Diamond / Warning)
-   - Low Risk: `●` (Circle / Check)
-2. **Keyboard Navigation**:
-   - `J` / `K` keys navigate Down/Up the patient queue.
-   - `Space` or `Enter` expands/collapses the agent evidence details.
-3. **Screen Reader Semantic Tree**:
-   - Proper `aria-live="polite"` regions when agent evaluations complete.
-   - Distinct heading hierarchy (`h1` patient name, `h2` agent findings, `h3` specific test results).
+1. **Dual-Encoding for Safety**: Every alert state is encoded via **Symbol + Color + Text Label**:
+   - `▲ HIGH RISK`: `#EF4444` + Triangle badge
+   - `◆ MEDIUM RISK`: `#F59E0B` + Diamond badge
+   - `● LOW RISK`: `#10B981` + Circle badge
+2. **Native Keyboard Accessibility**:
+   - Up/Down arrows navigate the patient queue in `st.sidebar.radio`.
+   - Enter/Space toggles `st.expander` provenance drawers natively.
+3. **High Contrast Typography**:
+   - Text on dark cards maintains $>12:1$ contrast ratio.
+   - Tabular monospace numbers (`Geist Mono` or system `ui-monospace`) prevent decimal misalignment in lab values.
 
 ---
 
-## 7. Implementation Checklist for Streamlit / Frontend
+## 7. Implementation Checklist for Streamlit
 
-- [ ] Use custom CSS injection (`st.markdown(..., unsafe_allow_html=True)`) or custom components to apply typography tokens.
-- [ ] Load `Geist Sans` and `Geist Mono` via `@font-face` or clean local system font fallbacks (`-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, monospace`).
-- [ ] Implement color tokens as native CSS variables (`--clinical-high`, `--clinical-med`, `--clinical-low`, `--surface-base`).
-- [ ] Render lab delta percentages in fixed-width tabular monospace columns.
-- [ ] Ensure patient switching takes $<50\text{ms}$ with zero layout jumping.
+- [x] Lock to single Python runtime (Streamlit on `localhost:8501`).
+- [x] Use `st.sidebar.radio` for the triage queue with instant arrow-key navigation.
+- [x] Inject clinical color tokens via a single concise `<style>` block.
+- [x] Format lab test values using tabular monospace.
+- [x] Use `st.expander` for collapsible Pydantic JSON provenance.

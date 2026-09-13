@@ -594,7 +594,234 @@ def build_topic_02_pdf():
     return pdf_path
 
 
+def build_topic_03_pdf():
+    pdf_path = COURSE_DIR / "Topic_03_Healthcare_Data_Standards_FHIR_LOINC_RxNorm.pdf"
+    doc = SimpleDocTemplate(
+        str(pdf_path),
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = get_course_styles()
+    story = []
+
+    # Title Banner
+    story.append(Paragraph("AegisClinical Master Course", styles["subtitle"]))
+    story.append(
+        Paragraph("Topic 3: Healthcare Data Standards — FHIR R4, LOINC, & RxNorm", styles["title"])
+    )
+    story.append(
+        HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0284c7"), spaceAfter=14)
+    )
+
+    # Executive Abstract Callout
+    story.append(
+        create_callout_box(
+            "Healthcare data is historically fragmented across incompatible vendor formats. "
+            "HL7 FHIR R4 solves this by defining standardized JSON resources. AegisClinical consumes FHIR bundles "
+            "and decodes universal medical ontologies: LOINC for laboratory observations, RxNorm for active medications, "
+            "and ICD-10 for chronic conditions, transforming raw records into verifiable clinical vectors.",
+            title="TOPIC OBJECTIVE",
+            color_hex="#0284c7",
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 1
+    story.append(Paragraph("1. The Interoperability Crisis: Why FHIR R4 Matters", styles["h1"]))
+    story.append(
+        Paragraph(
+            "For decades, hospital Electronic Health Records (EHRs) were walled gardens. Epic used Chronicles, "
+            "Cerner used Millennium, and each hospital used idiosyncratic database schemas. A blood test for potassium "
+            "might be stored as <code>'POTASS'</code> in one clinic, <code>'K+'</code> in another, and <code>'Serum Potassium'</code> in a third.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Fast Healthcare Interoperability Resources (HL7 FHIR, pronounced 'fire')</b> solved this problem "
+            "by introducing modern, REST-friendly, resource-oriented JSON architectures. Release 4 (FHIR R4) is now "
+            "the legally mandated interoperability baseline for healthcare software in the United States and Europe.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    # Section 2
+    story.append(Paragraph("2. The Anatomy of a FHIR R4 Bundle", styles["h1"]))
+    story.append(
+        Paragraph(
+            "In FHIR, all clinical data is modeled as <b>Resources</b>. A patient's complete chart is packaged inside a "
+            "<code>Bundle</code> containing a list of discrete <code>entry</code> objects:",
+            styles["body"],
+        )
+    )
+
+    fhir_data = [
+        [
+            Paragraph("<b>FHIR Resource</b>", styles["h2"]),
+            Paragraph("<b>Clinical Meaning</b>", styles["h2"]),
+            Paragraph("<b>Key Fields Parsed by AegisClinical</b>", styles["h2"]),
+        ],
+        [
+            Paragraph("<b>Patient</b>", styles["body"]),
+            Paragraph("Demographics and patient identity", styles["body"]),
+            Paragraph("<code>id</code>, <code>name.given</code>, <code>name.family</code>, <code>gender</code>, <code>birthDate</code>", styles["code"]),
+        ],
+        [
+            Paragraph("<b>Observation</b>", styles["body"]),
+            Paragraph("Laboratory tests, vital signs, physical exam", styles["body"]),
+            Paragraph("<code>code.coding[].code</code> (LOINC), <code>valueQuantity.value</code>, <code>unit</code>, <code>effectiveDateTime</code>", styles["code"]),
+        ],
+        [
+            Paragraph("<b>MedicationRequest</b>", styles["body"]),
+            Paragraph("Prescription order / active medication", styles["body"]),
+            Paragraph("<code>medicationCodeableConcept.coding[].code</code> (RxNorm), <code>text</code>, <code>authoredOn</code>", styles["code"]),
+        ],
+        [
+            Paragraph("<b>Condition</b>", styles["body"]),
+            Paragraph("Diagnosed disease / active problem list", styles["body"]),
+            Paragraph("<code>code.coding[].code</code> (ICD-10/SNOMED), <code>clinicalStatus</code>, <code>text</code>", styles["code"]),
+        ],
+    ]
+    t = Table(fhir_data, colWidths=[110, 160, 224])
+    t.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t)
+    story.append(Spacer(1, 10))
+
+    # Section 3: The 3 Core Ontologies
+    story.append(Paragraph("3. The Three Universal Ontologies Used in AegisClinical", styles["h1"]))
+    story.append(
+        Paragraph(
+            "To prevent ambiguity, AegisClinical does not rely on free-text pattern matching. It decodes standard healthcare ontologies:",
+            styles["body"],
+        )
+    )
+
+    story.append(Paragraph("A. LOINC (Logical Observation Identifiers Names and Codes)", styles["h2"]))
+    story.append(
+        Paragraph(
+            "LOINC is the global standard for identifying health measurements, observations, and laboratory tests. "
+            "AegisClinical explicitly monitors these LOINC identifiers:",
+            styles["body"],
+        )
+    )
+
+    loinc_data = [
+        [Paragraph("<b>LOINC Code</b>", styles["h2"]), Paragraph("<b>Analyte</b>", styles["h2"]), Paragraph("<b>Unit</b>", styles["h2"]), Paragraph("<b>Normal Range</b>", styles["h2"])],
+        [Paragraph("<code>2160-0</code>", styles["code"]), Paragraph("Serum Creatinine", styles["body"]), Paragraph("mg/dL", styles["body"]), Paragraph("0.7 – 1.3 mg/dL", styles["body"])],
+        [Paragraph("<code>2823-3</code>", styles["code"]), Paragraph("Serum Potassium", styles["body"]), Paragraph("mEq/L", styles["body"]), Paragraph("3.5 – 5.0 mEq/L", styles["body"])],
+        [Paragraph("<code>718-7</code>", styles["code"]), Paragraph("Hemoglobin", styles["body"]), Paragraph("g/dL", styles["body"]), Paragraph("12.0 – 17.5 g/dL", styles["body"])],
+        [Paragraph("<code>777-3</code>", styles["code"]), Paragraph("Platelets", styles["body"]), Paragraph("x10^3/uL", styles["body"]), Paragraph("150 – 450 x10^3/uL", styles["body"])],
+        [Paragraph("<code>2345-7</code>", styles["code"]), Paragraph("Blood Glucose", styles["body"]), Paragraph("mg/dL", styles["body"]), Paragraph("70 – 140 mg/dL", styles["body"])],
+    ]
+    t_loinc = Table(loinc_data, colWidths=[90, 150, 90, 164])
+    t_loinc.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+    story.append(t_loinc)
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("B. RxNorm (Normalized Drug Nomenclature)", styles["h2"]))
+    story.append(
+        Paragraph(
+            "Maintained by the US National Library of Medicine, RxNorm provides normalized names and codes for clinical drugs. "
+            "A physician might prescribe <i>'Prinivil'</i>, <i>'Zestril'</i>, or <i>'Lisinopril 20 MG'</i>. RxNorm links all of these to a single concept "
+            "(<code>RxNorm: 314076</code>), allowing AegisClinical's Pharmacology Agent to reliably map them to the <b>ACE-Inhibitor</b> class.",
+            styles["body"],
+        )
+    )
+
+    story.append(Paragraph("C. ICD-10-CM (International Classification of Diseases)", styles["h2"]))
+    story.append(
+        Paragraph(
+            "Used for medical diagnostic coding. AegisClinical inspects ICD-10 codes such as <code>I10</code> (Essential Hypertension), "
+            "<code>E11.9</code> (Type 2 Diabetes Mellitus), and <code>N18.3</code> (Chronic Kidney Disease Stage 3) to evaluate drug-disease contraindications.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 4: FHIR Observation JSON Snippet
+    story.append(Paragraph("4. Raw Synthea JSON Example: Serum Creatinine", styles["h1"]))
+    json_snippet = """{
+  "resourceType": "Observation",
+  "status": "final",
+  "code": {
+    "coding": [{
+      "system": "http://loinc.org",
+      "code": "2160-0",
+      "display": "Creatinine [Mass/volume] in Serum or Plasma"
+    }],
+    "text": "Serum Creatinine"
+  },
+  "effectiveDateTime": "2026-09-12T14:30:00Z",
+  "valueQuantity": { "value": 2.4, "unit": "mg/dL" },
+  "referenceRange": [{ "low": { "value": 0.7 }, "high": { "value": 1.3 } }]
+}"""
+
+    code_table = Table([[Paragraph(f"<pre>{json_snippet}</pre>", styles["code"])]], colWidths=[494])
+    code_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]
+        )
+    )
+    story.append(code_table)
+    story.append(Spacer(1, 8))
+
+    # Summary Callout
+    story.append(
+        KeepTogether(
+            create_callout_box(
+                "1. <b>Why is LOINC 2160-0 used instead of searching for the word 'Creatinine'?</b><br/>"
+                "Because different hospitals label creatinine differently ('Serum Cr', 'CREAT', 'Creat'). LOINC guarantees semantic precision.<br/><br/>"
+                "2. <b>What is the role of RxNorm in catching the Triple Whammy?</b><br/>"
+                "It allows the system to recognize that brand names like 'Lasix' and generic 'Furosemide' belong to the same loop diuretic class.<br/><br/>"
+                "3. <b>Next Step in Topic 4:</b> The Ingestion Parser — How <code>src/parser.py</code> chronologically orders labs and builds patient vectors with zero dependencies.",
+                title="KNOWLEDGE CHECK & NEXT STEP",
+                color_hex="#059669",
+                bg_hex="#f0fdf4",
+            )
+        )
+    )
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Generated Topic 03 PDF at: {pdf_path}")
+    return pdf_path
+
+
 if __name__ == "__main__":
     build_topic_01_pdf()
     build_topic_02_pdf()
+    build_topic_03_pdf()
+
 

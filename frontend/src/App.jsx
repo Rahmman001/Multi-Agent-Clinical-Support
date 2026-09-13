@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Activity,
-  AlertTriangle,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -12,11 +11,8 @@ import {
   HeartPulse,
   Pill,
   Search,
-  ShieldAlert,
   Stethoscope,
   Upload,
-  User,
-  Zap,
 } from 'lucide-react';
 
 export default function App() {
@@ -31,7 +27,6 @@ export default function App() {
   const [checkedDirectives, setCheckedDirectives] = useState({});
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Fetch initial synthetic patient cases
   useEffect(() => {
     fetch('/api/patients')
       .then((res) => {
@@ -47,13 +42,12 @@ export default function App() {
       .catch((err) => setError(err.message));
   }, []);
 
-  // Fetch evaluation when patient changes
   useEffect(() => {
     if (!selectedId) return;
     setLoading(true);
     fetch(`/api/patients/${selectedId}`)
       .then((res) => {
-        if (!res.ok) throw new Error('Multi-agent clinical evaluation failed');
+        if (!res.ok) throw new Error('Evaluation failed');
         return res.json();
       })
       .then((data) => {
@@ -66,7 +60,6 @@ export default function App() {
       });
   }, [selectedId]);
 
-  // Handle custom FHIR upload
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -94,12 +87,12 @@ export default function App() {
         name: data.patient_name || 'Uploaded Patient',
         age: data.patient_age ?? '?',
         gender: data.gender || 'unknown',
-        summary: `${data.triage_assessment?.triage_level || 'EVALUATED'} Priority (Custom Bundle)`,
+        summary: `Custom Bundle (${data.triage_assessment?.triage_level || 'EVAL'})`,
         priority: data.triage_assessment?.triage_level || 'MEDIUM',
       };
       setPatients((prev) => [customPatient, ...prev]);
       setSelectedId(customPatient.id);
-      showToast('Custom FHIR R4 Bundle evaluated successfully');
+      showToast('Custom FHIR R4 Bundle evaluated');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -110,7 +103,7 @@ export default function App() {
 
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   const toggleDirective = (idx) => {
@@ -120,32 +113,30 @@ export default function App() {
     }));
   };
 
-  // Copy synthesized EHR note
   const handleCopyClinicalNote = () => {
     if (!patientData) return;
     const triage = patientData.triage_assessment;
     const lines = [
-      `=== AEGISCLINICAL CDSS MULTI-AGENT TRIAGE NOTE ===`,
-      `Patient: ${patientData.patient_name} (ID: ${patientData.patient_id}, Age: ${patientData.patient_age}, Gender: ${patientData.gender})`,
-      `Triage Level: ${triage?.triage_level || 'UNKNOWN'} PRIORITY`,
-      `Lead Assessment: ${triage?.summary || ''}`,
+      `AEGISCLINICAL CDSS — TRIAGE ASSESSMENT`,
+      `Patient: ${patientData.patient_name} | MRN: ${patientData.patient_id} | Age: ${patientData.patient_age} | Gender: ${patientData.gender}`,
+      `Triage Level: ${triage?.triage_level || 'UNKNOWN'}`,
+      `Summary: ${triage?.summary || ''}`,
       ``,
-      `[LABORATORY SPECIALIST FINDINGS]`,
+      `LABORATORY SPECIALIST:`,
       ...(patientData.lab_alerts?.map(
-        (l) => `- ${l.name}: ${l.current_value} ${l.unit} [${l.alert_type}] - ${l.clinical_significance}`
-      ) || ['- No acute laboratory alerts.']),
+        (l) => `- ${l.name}: ${l.current_value} ${l.unit} (${l.alert_type}) — ${l.clinical_significance}`
+      ) || ['- Stable normal baseline.']),
       ``,
-      `[PHARMACOLOGY SPECIALIST FINDINGS]`,
+      `PHARMACOLOGY SPECIALIST:`,
       ...(patientData.drug_interactions?.map(
-        (d) => `- ${d.drugs.join(' + ')} [${d.severity}]: ${d.mechanism}. Rec: ${d.recommendation}`
-      ) || ['- No contraindicated drug combinations identified.']),
+        (d) => `- ${d.drugs.join(' + ')} [${d.severity}]: ${d.mechanism} | Rec: ${d.recommendation}`
+      ) || ['- No contraindicated drug combinations.']),
       ``,
-      `[CLINICAL ACTION PLAN]`,
+      `ACTION DIRECTIVES:`,
       ...(triage?.action_items?.map((a) => `[ ] ${a}`) || ['- Routine care.']),
-      `==================================================`,
     ];
     navigator.clipboard.writeText(lines.join('\n'));
-    showToast('Clinical Triage Note copied to clipboard for EHR');
+    showToast('Clinical Note copied to clipboard');
   };
 
   const filteredPatients = patients.filter((p) => {
@@ -165,77 +156,66 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Toast Notification */}
       {toastMessage && (
-        <div className="toast-notice">
-          <CheckCircle2 size={16} color="#38bdf8" />
+        <div className="toast-min">
+          <CheckCircle2 size={15} />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Sidebar: Patient Triage Queue */}
+      {/* Minimal Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="logo-row">
-            <div className="brand-group">
-              <div className="brand-icon">
-                <Stethoscope size={22} />
-              </div>
-              <div>
-                <div className="brand-title">AegisClinical</div>
-                <div className="brand-subtitle">Multi-Agent Decision Support</div>
-              </div>
+        <div className="sidebar-top">
+          <div className="brand-minimal">
+            <div className="brand-icon-min">
+              <Stethoscope size={16} strokeWidth={2.2} />
             </div>
+            <span className="brand-name">AegisClinical</span>
           </div>
         </div>
 
-        {/* Search / Filter */}
-        <div className="search-box">
-          <Search size={14} className="search-icon-pos" />
+        <div className="search-wrap">
+          <Search size={13} className="search-icon" />
           <input
             type="text"
-            className="search-input"
-            placeholder="Search patient, risk, or condition..."
+            className="search-input-min"
+            placeholder="Search patients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        {/* Queue List */}
-        <div className="patient-queue">
-          <div className="queue-label-row">
-            <span className="queue-label">Clinical Triage Queue</span>
-            <span className="queue-count">{filteredPatients.length} Cases</span>
-          </div>
+        <div className="queue-header">
+          <span className="queue-title">Queue</span>
+          <span className="queue-title">{filteredPatients.length}</span>
+        </div>
 
+        <div className="queue-items">
           {filteredPatients.map((p) => {
             const isSelected = p.id === selectedId;
             return (
               <div
                 key={p.id}
-                className={`patient-card ${isSelected ? 'active' : ''}`}
+                className={`patient-row ${isSelected ? 'active' : ''}`}
                 onClick={() => setSelectedId(p.id)}
               >
-                <div className="card-top">
+                <div className="p-row-top">
                   <span className="p-name">{p.name}</span>
-                  <span className={`p-tag ${p.priority}`}>{p.priority}</span>
+                  <span className="p-status-pip">
+                    <span className={`pip-dot ${p.priority}`}></span>
+                    <span>{p.priority}</span>
+                  </span>
                 </div>
-                <div className="p-meta-line">
-                  <span>{p.age}y</span>
-                  <span>&bull;</span>
-                  <span>{p.gender?.toUpperCase()}</span>
-                </div>
-                <div className="p-snippet">{p.summary}</div>
+                <div className="p-sub">{p.summary}</div>
               </div>
             );
           })}
         </div>
 
-        {/* Upload Custom FHIR */}
-        <div className="sidebar-footer">
-          <label className="upload-card-btn">
-            <Upload size={15} />
-            <span>{uploading ? 'Evaluating Bundle...' : 'Upload FHIR R4 Bundle'}</span>
+        <div className="sidebar-bottom">
+          <label className="upload-button-min">
+            <Upload size={14} />
+            <span>{uploading ? 'Parsing...' : 'Upload FHIR R4 Bundle'}</span>
             <input
               type="file"
               accept=".json"
@@ -249,34 +229,28 @@ export default function App() {
 
       {/* Main Viewport */}
       <main className="main-viewport">
-        {/* Hospital Header */}
-        <header className="hospital-header">
-          <div className="patient-identity">
-            <h2>{loading ? 'Evaluating Record...' : patientData?.patient_name || 'Patient'}</h2>
-            <div className="identity-badges">
-              <span className="chip mono">
-                MRN: {patientData?.patient_id || 'UNKNOWN'}
-              </span>
-              <span className="chip">
-                Age: {patientData?.patient_age ?? 'N/A'}
-              </span>
-              <span className="chip">
-                Gender: {patientData?.gender ? patientData.gender.toUpperCase() : 'N/A'}
-              </span>
-              <span className="chip mono">
-                Standard: FHIR R4 JSON
-              </span>
+        <header className="top-identity-bar">
+          <div className="identity-left">
+            <h2>{loading ? 'Evaluating...' : patientData?.patient_name || 'Patient'}</h2>
+            <div className="identity-tags">
+              <span className="tag-mono">MRN: {patientData?.patient_id || 'UNKNOWN'}</span>
+              <span>&bull;</span>
+              <span>{patientData?.patient_age} years old</span>
+              <span>&bull;</span>
+              <span style={{ textTransform: 'capitalize' }}>{patientData?.gender}</span>
+              <span>&bull;</span>
+              <span className="tag-mono">FHIR R4</span>
             </div>
           </div>
 
-          <div className="header-actions">
-            <button className="copy-ehr-btn" onClick={handleCopyClinicalNote}>
-              <ClipboardCopy size={15} />
-              <span>Copy EHR Note</span>
+          <div className="identity-actions">
+            <button className="btn-minimal" onClick={handleCopyClinicalNote}>
+              <ClipboardCopy size={13} />
+              <span>Copy Note</span>
             </button>
-            <div className="engine-telemetry-badge">
-              <span className="pulse-led"></span>
-              <span>LangGraph Scatter-Gather &bull; Local Ollama</span>
+            <div className="system-pill">
+              <span className="sys-dot"></span>
+              <span>LangGraph &bull; Ollama</span>
             </div>
           </div>
         </header>
@@ -284,16 +258,16 @@ export default function App() {
         {error && (
           <div
             style={{
-              padding: '1rem',
+              padding: '0.85rem 1rem',
               backgroundColor: '#fff1f2',
               border: '1px solid #fecdd3',
               color: '#9f1239',
-              borderRadius: '8px',
+              borderRadius: '6px',
               marginBottom: '1.5rem',
-              fontSize: '0.88rem',
+              fontSize: '0.82rem',
             }}
           >
-            <strong>Error:</strong> {error}
+            {error}
           </div>
         )}
 
@@ -304,76 +278,51 @@ export default function App() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              height: '420px',
-              color: '#64748b',
-              gap: '1rem',
+              height: '360px',
+              color: '#71717a',
+              gap: '0.75rem',
             }}
           >
-            <Activity className="animate-spin" size={36} color="#0284c7" />
-            <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>
-              Executing Parallel Multi-Agent Clinical Evaluation...
-            </p>
+            <Activity className="animate-spin" size={28} strokeWidth={1.8} color="#18181b" />
+            <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>
+              Evaluating clinical record...
+            </span>
           </div>
         ) : (
           <>
-            {/* Master Triage Urgency Banner */}
-            <section className={`master-banner ${triageLevel}`}>
-              <div className="banner-top-row">
-                <span className={`banner-pill ${triageLevel}`}>
-                  {triageLevel === 'HIGH' && <ShieldAlert size={15} />}
-                  {triageLevel === 'MEDIUM' && <AlertTriangle size={15} />}
-                  {triageLevel === 'LOW' && <CheckCircle2 size={15} />}
+            {/* Triage Callout */}
+            <section className="triage-callout">
+              <div className="triage-callout-header">
+                <span className={`triage-pill-clean ${triageLevel}`}>
+                  <span className={`pip-dot ${triageLevel}`}></span>
                   <span>{triageLevel} Priority Triage</span>
                 </span>
-                <span className={`banner-headline ${triageLevel}`}>
-                  {triageLevel === 'HIGH' && 'Emergent Clinical Intervention Required'}
-                  {triageLevel === 'MEDIUM' && 'Urgent Clinical Review & Monitoring'}
-                  {triageLevel === 'LOW' && 'Stable Baseline / Routine Management'}
-                </span>
               </div>
-              <div className="banner-narrative">
-                {triage?.summary || 'Multi-agent clinical synthesis completed.'}
+              <div className="triage-summary">
+                {triage?.summary || 'Assessment completed.'}
               </div>
             </section>
 
-            {/* Interactive Clinical Directives */}
+            {/* Directives Checklist */}
             {triage?.action_items && triage.action_items.length > 0 && (
-              <section className="directives-card">
-                <div className="directives-header">
-                  <Zap size={16} color="#d97706" />
-                  <span>Immediate Attending Physician Orders</span>
-                </div>
-                <div className="directives-list">
+              <section className="directives-block">
+                <div className="block-label">Clinical Directives</div>
+                <div className="directives-wrap">
                   {triage.action_items.map((action, idx) => {
                     const isChecked = !!checkedDirectives[idx];
                     return (
                       <div
                         key={idx}
-                        className="directive-item"
+                        className="directive-row"
                         onClick={() => toggleDirective(idx)}
-                        style={{ cursor: 'pointer', userSelect: 'none' }}
                       >
-                        <div
-                          style={{
-                            width: '18px',
-                            height: '18px',
-                            borderRadius: '4px',
-                            border: isChecked ? '1px solid #16a34a' : '1.5px solid #cbd5e1',
-                            backgroundColor: isChecked ? '#16a34a' : '#fff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            flexShrink: 0,
-                            marginTop: '2px',
-                          }}
-                        >
-                          {isChecked && <Check size={12} strokeWidth={3} />}
+                        <div className={`check-box ${isChecked ? 'checked' : ''}`}>
+                          {isChecked && <Check size={11} strokeWidth={3} />}
                         </div>
                         <span
                           style={{
                             textDecoration: isChecked ? 'line-through' : 'none',
-                            color: isChecked ? '#94a3b8' : '#0f172a',
+                            color: isChecked ? '#a1a1aa' : 'inherit',
                           }}
                         >
                           {action}
@@ -385,171 +334,136 @@ export default function App() {
               </section>
             )}
 
-            {/* 3-Column Evidence Bento Grid */}
-            <div className="bento-3col">
-              {/* Column 1: Laboratory Specialist Agent */}
-              <div className="bento-card">
-                <div className="bento-card-header">
-                  <div className="bento-header-left">
-                    <FlaskConical size={18} color="#0284c7" />
-                    <h3>Laboratory Specialist</h3>
+            {/* 3-Column Evidence Bento */}
+            <div className="evidence-grid">
+              {/* Lab Specialist */}
+              <div className="evidence-col">
+                <div className="col-header">
+                  <div className="col-header-title">
+                    <FlaskConical size={15} strokeWidth={2} />
+                    <span>Laboratory</span>
                   </div>
-                  <span className="badge-count">{labAlerts.length} Alerts</span>
+                  <span className="col-badge">{labAlerts.length}</span>
                 </div>
-                <div className="bento-body">
+                <div className="col-body">
                   {labAlerts.length > 0 ? (
-                    labAlerts.map((lab, i) => {
-                      const isCreatinine = lab.name.toLowerCase().includes('creatinine');
-                      const percentDelta =
-                        lab.baseline_value && lab.baseline_value > 0
-                          ? Math.round(((lab.current_value - lab.baseline_value) / lab.baseline_value) * 100)
-                          : null;
-
-                      return (
-                        <div key={i} className={`lab-delta-card ${lab.severity}`}>
-                          <div className="lab-card-title">
-                            <span className="lab-analyte-name">{lab.name}</span>
-                            <span className={`lab-kdigo-badge ${lab.severity}`}>
-                              {lab.alert_type}
-                            </span>
-                          </div>
-
-                          <div className="delta-compare-row">
-                            <span className="delta-current">
-                              {lab.current_value} <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{lab.unit}</span>
-                            </span>
-                            {lab.baseline_value != null && (
-                              <span className="delta-baseline">
-                                Baseline: {lab.baseline_value} {lab.unit}
-                              </span>
-                            )}
-                            {percentDelta !== null && percentDelta > 0 && (
-                              <span className="delta-percent-pill">
-                                +{percentDelta}%
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="lab-sig-text">{lab.clinical_significance}</div>
+                    labAlerts.map((lab, i) => (
+                      <div key={i} className={`item-card ${lab.severity}`}>
+                        <div className="item-title-row">
+                          <span className="item-title">{lab.name}</span>
+                          <span className={`item-pill ${lab.severity}`}>{lab.alert_type}</span>
                         </div>
-                      );
-                    })
+                        <div className="item-values">
+                          <span>{lab.current_value} {lab.unit}</span>
+                          {lab.baseline_value != null && (
+                            <span style={{ color: '#71717a', marginLeft: '0.4rem', fontSize: '0.76rem' }}>
+                              (Base: {lab.baseline_value})
+                            </span>
+                          )}
+                        </div>
+                        <div className="item-subtext">{lab.clinical_significance}</div>
+                      </div>
+                    ))
                   ) : (
-                    <div className="bento-empty">
-                      <CheckCircle2 size={32} color="#10b981" />
-                      <p>All laboratory analytes stable and within normal baseline.</p>
+                    <div className="empty-clean">
+                      <p>All analytes within normal limits.</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Column 2: Pharmacology Specialist Agent */}
-              <div className="bento-card">
-                <div className="bento-card-header">
-                  <div className="bento-header-left">
-                    <Pill size={18} color="#ea580c" />
-                    <h3>Pharmacology Specialist</h3>
+              {/* Pharmacology Specialist */}
+              <div className="evidence-col">
+                <div className="col-header">
+                  <div className="col-header-title">
+                    <Pill size={15} strokeWidth={2} />
+                    <span>Pharmacology</span>
                   </div>
-                  <span className="badge-count">{drugInteractions.length} Flags</span>
+                  <span className="col-badge">{drugInteractions.length}</span>
                 </div>
-                <div className="bento-body">
+                <div className="col-body">
                   {drugInteractions.length > 0 ? (
                     drugInteractions.map((ddi, i) => (
-                      <div key={i} className={`pharma-alert-card ${ddi.severity}`}>
-                        <div className="lab-card-title">
-                          <span className="pharma-drugs-line">
-                            {ddi.drugs.join(' + ')}
-                          </span>
-                          <span className={`lab-kdigo-badge ${ddi.severity === 'CONTRAINDICATED' ? 'CRITICAL' : 'HIGH'}`}>
-                            {ddi.severity}
-                          </span>
+                      <div key={i} className={`item-card ${ddi.severity}`}>
+                        <div className="item-title-row">
+                          <span className="item-title">{ddi.drugs.join(' + ')}</span>
+                          <span className={`item-pill ${ddi.severity}`}>{ddi.severity}</span>
                         </div>
-
-                        <div className="pharma-mechanism-box">
-                          <strong>Mechanism:</strong> {ddi.mechanism}
-                        </div>
-
-                        <div className="pharma-rec-box">
-                          <span>💡</span>
-                          <span>{ddi.recommendation}</span>
-                        </div>
+                        <div className="item-subtext">{ddi.mechanism}</div>
+                        <div className="item-rec">Rec: {ddi.recommendation}</div>
                       </div>
                     ))
                   ) : (
-                    <div className="bento-empty">
-                      <CheckCircle2 size={32} color="#10b981" />
-                      <p>No critical drug contraindications or interactions identified.</p>
+                    <div className="empty-clean">
+                      <p>No contraindications detected.</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Column 3: Medical History Specialist Agent */}
-              <div className="bento-card">
-                <div className="bento-card-header">
-                  <div className="bento-header-left">
-                    <HeartPulse size={18} color="#6366f1" />
-                    <h3>Medical History</h3>
+              {/* Medical History */}
+              <div className="evidence-col">
+                <div className="col-header">
+                  <div className="col-header-title">
+                    <HeartPulse size={15} strokeWidth={2} />
+                    <span>Medical History</span>
                   </div>
-                  <span className="badge-count">{chronicConditions.length} Diagnoses</span>
+                  <span className="col-badge">{chronicConditions.length}</span>
                 </div>
-                <div className="bento-body">
+                <div className="col-body">
                   {chronicConditions.length > 0 ? (
                     chronicConditions.map((cond, i) => (
-                      <div key={i} className="history-item-card">
-                        <div>
-                          <div className="history-name">{cond.display}</div>
-                          <div style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', marginTop: '2px' }}>
-                            Status: {cond.status}
-                          </div>
+                      <div key={i} className="item-card">
+                        <div className="item-title-row">
+                          <span className="item-title">{cond.display}</span>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: '#71717a' }}>
+                            {cond.code}
+                          </span>
                         </div>
-                        <span className="history-code">{cond.code}</span>
+                        <div className="item-subtext" style={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>
+                          Status: {cond.status}
+                        </div>
                       </div>
                     ))
                   ) : (
-                    <div className="bento-empty">
-                      <CheckCircle2 size={32} color="#10b981" />
-                      <p>No active chronic comorbidities recorded in medical history.</p>
+                    <div className="empty-clean">
+                      <p>No active chronic comorbidities.</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Audit State Drawer */}
-            <div style={{ marginTop: '1rem' }}>
-              <div className="audit-bar">
-                <button
-                  className="audit-toggle-btn"
-                  onClick={() => setShowAudit(!showAudit)}
-                >
-                  <FileCode size={16} />
-                  <span>
-                    {showAudit ? 'Hide Clinical Graph State Inspector' : 'Inspect Full Serialized Pydantic State & Audit Trail'}
-                  </span>
-                  {showAudit ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-
-                {showAudit && (
-                  <button
-                    className="chip"
-                    onClick={() => {
-                      navigator.clipboard.writeText(JSON.stringify(patientData, null, 2));
-                      showToast('Audit JSON copied to clipboard');
-                    }}
-                  >
-                    <ClipboardCopy size={13} />
-                    <span>Copy JSON</span>
-                  </button>
-                )}
-              </div>
+            {/* Minimal Audit Bar */}
+            <section className="audit-bar-min">
+              <button
+                className="btn-minimal"
+                onClick={() => setShowAudit(!showAudit)}
+              >
+                <FileCode size={13} />
+                <span>{showAudit ? 'Hide State Inspector' : 'Inspect Pydantic State'}</span>
+                {showAudit ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              </button>
 
               {showAudit && (
-                <div className="audit-viewer">
-                  <pre>{JSON.stringify(patientData, null, 2)}</pre>
-                </div>
+                <button
+                  className="btn-minimal"
+                  onClick={() => {
+                    navigator.clipboard.writeText(JSON.stringify(patientData, null, 2));
+                    showToast('State JSON copied to clipboard');
+                  }}
+                >
+                  <ClipboardCopy size={13} />
+                  <span>Copy JSON</span>
+                </button>
               )}
-            </div>
+            </section>
+
+            {showAudit && (
+              <div className="audit-viewer-min">
+                <pre>{JSON.stringify(patientData, null, 2)}</pre>
+              </div>
+            )}
           </>
         )}
       </main>

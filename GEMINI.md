@@ -58,8 +58,18 @@ For multi-step tasks, state a brief plan:
 3. [Step] → verify: [check]
 ```
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+## 5. Continuous Living Documentation (CONTEXT.md)
+
+**Keep `CONTEXT.md` authoritative and synchronized with the codebase.**
+
+Whenever any of the following occur:
+- Architecture, agent topology, or pipeline flows change
+- New API endpoints, CLI scripts, or data models are added
+- Clinical rules, KDIGO staging, or pharmacological matrices are modified
+- Schemas, state contracts, or dependencies change
+
+Update `CONTEXT.md` in the same commit to reflect the new state, file paths, and guarantees.
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, `CONTEXT.md` remains accurate, and clarifying questions come before implementation rather than after mistakes.

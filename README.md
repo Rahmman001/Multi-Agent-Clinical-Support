@@ -120,7 +120,27 @@ The project includes unit and integration tests covering parser extraction, clin
 pytest tests/ -v
 ```
 
-All 15 tests pass with zero external network dependencies.
+All 17 tests pass with zero external network dependencies.
+
+---
+
+## 📚 Course Curriculum & Medical Guide for Engineers
+
+A complete 10-topic master course and clinical translation guide are included in the repository:
+
+* **🩺 [Medical Concepts Guide for Software Engineers](docs/MEDICAL_CONCEPTS.md)**: Translates nephrology, KDIGO AKI staging, hemodynamics, Triple Whammy interactions, and panic lab values into intuitive engineering, plumbing, and electrical concepts.
+* **🎓 10-Topic Master Course PDFs (`docs/course/`)**:
+  1. `Topic_01_The_Healthcare_Problem_and_Alert_Fatigue.pdf`
+  2. `Topic_02_Multi_Agent_Architecture_and_Scatter_Gather.pdf`
+  3. `Topic_03_Healthcare_Data_Standards_FHIR_LOINC_RxNorm.pdf`
+  4. `Topic_04_The_Ingestion_Parser_and_Lab_Trajectories.pdf`
+  5. `Topic_05_Deterministic_Rules_KDIGO_and_DDI_Matrix.pdf`
+  6. `Topic_06_LangGraph_and_State_Contracts.pdf`
+  7. `Topic_07_Local_SLM_Inference_and_Fallbacks.pdf`
+  8. `Topic_08_Backend_Architecture_FastAPI_and_Worker_Threadpools.pdf`
+  9. `Topic_09_The_Clinical_Console_UI_and_State_Management.pdf`
+  10. `Topic_10_Testing_Verification_and_Clinical_Validation.pdf`
+  * *Companion*: `Medical_Concepts_Guide.pdf`
 
 ---
 

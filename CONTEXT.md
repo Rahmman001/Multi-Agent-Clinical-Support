@@ -107,6 +107,11 @@ All clinical evaluation is implemented in [`src/rules.py`](src/rules.py) with ze
 │   │   ├── App.jsx         # Minimalist clinical console, queue, directives, and SOAP copy
 │   │   └── index.css       # Clean clinical design tokens (Inter, zinc borders, quiet pips)
 │   └── dist/               # Production build served directly by FastAPI
+├── docs/
+│   ├── MEDICAL_CONCEPTS.md # Engineer's guide to nephrology, hemodynamics, and panic labs
+│   ├── DESIGN.md           # Visual design tokens and UI architecture
+│   ├── TRD.md              # Technical requirements document
+│   └── course/             # Executive PDF curriculum (Topics 1-10 + Medical Concepts Guide)
 ├── data/patients/          # Synthetic test cases:
 │   ├── patient_01_high_risk.json  # Stage 2 AKI + Triple Whammy (Arthur Morales)
 │   ├── patient_02_med_risk.json   # Hyperkalemia + Dual RAAS Blockade (Elena Rostova)
@@ -149,7 +154,7 @@ npm --prefix frontend run build
 ```bash
 .venv/bin/python scripts/generate_topic_pdf.py
 ```
-Compiles the complete 10-topic executive PDF curriculum into `docs/course/`:
+Compiles the complete 10-topic executive PDF curriculum + Medical Guide into `docs/course/`:
 - `Topic_01_The_Healthcare_Problem_and_Alert_Fatigue.pdf`
 - `Topic_02_Multi_Agent_Architecture_and_Scatter_Gather.pdf`
 - `Topic_03_Healthcare_Data_Standards_FHIR_LOINC_RxNorm.pdf`
@@ -160,6 +165,7 @@ Compiles the complete 10-topic executive PDF curriculum into `docs/course/`:
 - `Topic_08_Backend_Architecture_FastAPI_and_Worker_Threadpools.pdf`
 - `Topic_09_The_Clinical_Console_UI_and_State_Management.pdf`
 - `Topic_10_Testing_Verification_and_Clinical_Validation.pdf`
+- `Medical_Concepts_Guide.pdf` (Companion Clinical Glossary)
 (Copies automatically synchronized with `$HOME/Downloads/`).
 
 ---

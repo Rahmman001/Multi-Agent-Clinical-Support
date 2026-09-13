@@ -2282,6 +2282,208 @@ def build_topic_10_pdf():
     return pdf_path
 
 
+def build_medical_primer_pdf():
+    pdf_path = COURSE_DIR / "Medical_Concepts_Guide.pdf"
+    doc = SimpleDocTemplate(
+        str(pdf_path),
+        pagesize=letter,
+        leftMargin=54,
+        rightMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = get_course_styles()
+    story = []
+
+    # Title Banner
+    story.append(Paragraph("AegisClinical Knowledge Companion", styles["subtitle"]))
+    story.append(
+        Paragraph("Clinical Concepts & Medical Glossary for Engineers", styles["title"])
+    )
+    story.append(
+        HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0284c7"), spaceAfter=14)
+    )
+
+    # Executive Abstract Callout
+    story.append(
+        create_callout_box(
+            "Software engineers working on clinical decision support systems do not need a medical degree. "
+            "This primer translates nephrology, renal hemodynamics, acute kidney injury (AKI), drug interactions, "
+            "and laboratory panic values into intuitive mechanical, plumbing, and distributed system concepts.",
+            title="ENGINEER'S MEDICAL PRIMER",
+            color_hex="#0284c7",
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 1: The Kidney as a Filter
+    story.append(Paragraph("1. The Kidney as a Water Filter (Creatinine & AKI)", styles["h1"]))
+    story.append(
+        Paragraph(
+            "The human kidneys are two continuous biological filtration units filtering waste out of 5 liters of circulating blood. "
+            "Muscles steadily generate a harmless byproduct called <b>Creatinine</b>. When kidneys filter cleanly, blood creatinine "
+            "stays low (0.7 - 1.1 mg/dL). If the filter gets clogged or damaged, creatinine builds up rapidly in the blood.",
+            styles["body"],
+        )
+    )
+
+    kdigo_data = [
+        [Paragraph("<b>KDIGO Stage</b>", styles["h2"]), Paragraph("<b>Mathematical Trigger</b>", styles["h2"]), Paragraph("<b>Clinical Meaning & Physician Action</b>", styles["h2"])],
+        [
+            Paragraph("<b>Stage 1</b> (Moderate)", styles["body"]),
+            Paragraph("Delta &ge; 0.3 mg/dL within 48h or 1.5x - 1.9x baseline", styles["body"]),
+            Paragraph("Mild acute filtration drop. Rehydrate, review medications, recheck in 24h.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>Stage 2</b> (High Priority)", styles["body"]),
+            Paragraph("Creatinine 2.0x - 2.9x baseline (e.g. 1.0 &rarr; 2.4 mg/dL)", styles["body"]),
+            Paragraph("Significant injury. Discontinue offending nephrotoxic medications immediately.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>Stage 3</b> (Critical)", styles["body"]),
+            Paragraph("Creatinine &ge; 3.0x baseline or &ge; 4.0 mg/dL with acute rise", styles["body"]),
+            Paragraph("Near total filter shutdown. Emergency nephrology consult; possible dialysis.", styles["body"]),
+        ],
+    ]
+    t_kdigo = Table(kdigo_data, colWidths=[110, 160, 224])
+    t_kdigo.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ]
+        )
+    )
+    story.append(t_kdigo)
+    story.append(Spacer(1, 10))
+
+    # Section 2: Renal Hemodynamics & Triple Whammy
+    story.append(Paragraph("2. Renal Hemodynamics & The 'Triple Whammy'", styles["h1"]))
+    story.append(
+        Paragraph(
+            "To filter waste, the kidney requires high internal water pressure. Picture a kitchen sink with an inlet faucet "
+            "and an outlet drain pipe:",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "• <b>NSAIDs (Advil / Ibuprofen / Naproxen):</b> Constrict the inlet faucet, cutting off incoming blood volume.<br/>"
+            "• <b>ACE Inhibitors & ARBs (Lisinopril / Losartan):</b> Dilate (open wide) the drain pipe, collapsing pressure.<br/>"
+            "• <b>Diuretics (Furosemide / Water Pills):</b> Drain total circulating body fluid.<br/>"
+            "• <b>The Triple Whammy (Contraindicated):</b> Taking all three together causes internal kidney pressure to collapse "
+            "to near zero, precipitating acute prerenal kidney failure.",
+            styles["body"],
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Section 3: Electrolytes & Electrical Stability
+    story.append(Paragraph("3. Electrolytes: The Heart's Electrical Grid", styles["h1"]))
+
+    lytes_data = [
+        [Paragraph("<b>Biomarker</b>", styles["h2"]), Paragraph("<b>Normal Range</b>", styles["h2"]), Paragraph("<b>Panic Threshold</b>", styles["h2"]), Paragraph("<b>Life-Threatening Mechanism</b>", styles["h2"])],
+        [
+            Paragraph("<b>Potassium (K+)</b>", styles["body"]),
+            Paragraph("3.5 - 5.0 mEq/L", styles["body"]),
+            Paragraph("<b>&gt; 6.0 mEq/L</b> (Hyperkalemia)", styles["body"]),
+            Paragraph("Disrupts cardiac electrical resting potential; causes ventricular fibrillation / cardiac arrest.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>Hemoglobin (Hb)</b>", styles["body"]),
+            Paragraph("12.0 - 17.5 g/dL", styles["body"]),
+            Paragraph("<b>&lt; 7.0 g/dL</b> (Severe Anemia)", styles["body"]),
+            Paragraph("Blood cannot carry adequate oxygen to brain and organs; requires urgent blood transfusion.", styles["body"]),
+        ],
+    ]
+    t_lytes = Table(lytes_data, colWidths=[110, 94, 130, 160])
+    t_lytes.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ]
+        )
+    )
+    story.append(t_lytes)
+    story.append(Spacer(1, 10))
+
+    # Section 4: Healthcare Ontologies
+    story.append(Paragraph("4. Healthcare Ontologies & Code Standards", styles["h1"]))
+
+    onto_data = [
+        [Paragraph("<b>Standard</b>", styles["h2"]), Paragraph("<b>Domain Governed</b>", styles["h2"]), Paragraph("<b>Codebase Example</b>", styles["h2"]), Paragraph("<b>Plain English Meaning</b>", styles["h2"])],
+        [
+            Paragraph("<b>FHIR R4</b>", styles["body"]),
+            Paragraph("JSON API Graph Schema", styles["body"]),
+            Paragraph("<code>resourceType: Observation</code>", styles["body"]),
+            Paragraph("Standard interoperable health record payload.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>LOINC</b>", styles["body"]),
+            Paragraph("Laboratory Tests", styles["body"]),
+            Paragraph("<code>2160-0</code>", styles["body"]),
+            Paragraph("Serum Creatinine concentration test.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>RxNorm</b>", styles["body"]),
+            Paragraph("Medications & Dosages", styles["body"]),
+            Paragraph("<code>314076</code>", styles["body"]),
+            Paragraph("Lisinopril 10 MG Oral Tablet.", styles["body"]),
+        ],
+        [
+            Paragraph("<b>SNOMED-CT</b>", styles["body"]),
+            Paragraph("Diagnoses & Diseases", styles["body"]),
+            Paragraph("<code>38341003</code>", styles["body"]),
+            Paragraph("Essential Hypertension (high blood pressure).", styles["body"]),
+        ],
+    ]
+    t_onto = Table(onto_data, colWidths=[80, 120, 140, 154])
+    t_onto.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f1f5f9")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ]
+        )
+    )
+    story.append(t_onto)
+    story.append(Spacer(1, 10))
+
+    # Section 5: Code-to-Clinic Rosetta Stone
+    story.append(
+        KeepTogether(
+            create_callout_box(
+                "<b>CODE-TO-CLINIC ROSETTA STONE:</b><br/>"
+                "• <code>KDIGO_AKI_STAGE_2</code> = Patient's kidney filter is 50% failing; hold blood pressure meds & NSAIDs.<br/>"
+                "• <code>TRIPLE_WHAMMY</code> = Blood pressure pill + water pill + Advil taking together; stop Advil immediately.<br/>"
+                "• <code>PANIC_VALUE (K+ &gt; 6.0)</code> = Potassium spike risking cardiac arrest; order emergent stat ECG.<br/>"
+                "• <code>triage_level: HIGH</code> = Critical bedside emergency; move patient to top of rounding queue.<br/>"
+                "• <code>triage_level: LOW</code> = Stable baseline vitals; safe for standard outpatient observation.",
+                title="KEY CODEBASE CONSTANTS & MEANINGS",
+                color_hex="#059669",
+                bg_hex="#f0fdf4",
+            )
+        )
+    )
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Generated Medical Primer PDF at: {pdf_path}")
+    return pdf_path
+
+
 if __name__ == "__main__":
     build_topic_01_pdf()
     build_topic_02_pdf()
@@ -2293,6 +2495,8 @@ if __name__ == "__main__":
     build_topic_08_pdf()
     build_topic_09_pdf()
     build_topic_10_pdf()
+    build_medical_primer_pdf()
+
 
 
 

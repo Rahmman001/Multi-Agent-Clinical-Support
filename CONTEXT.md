@@ -149,7 +149,18 @@ npm --prefix frontend run build
 ```bash
 .venv/bin/python scripts/generate_topic_pdf.py
 ```
-Compiles executive PDF course materials into `docs/course/`.
+Compiles the complete 10-topic executive PDF curriculum into `docs/course/`:
+- `Topic_01_The_Healthcare_Problem_and_Alert_Fatigue.pdf`
+- `Topic_02_Multi_Agent_Architecture_and_Scatter_Gather.pdf`
+- `Topic_03_Healthcare_Data_Standards_FHIR_LOINC_RxNorm.pdf`
+- `Topic_04_The_Ingestion_Parser_and_Lab_Trajectories.pdf`
+- `Topic_05_Deterministic_Rules_KDIGO_and_DDI_Matrix.pdf`
+- `Topic_06_LangGraph_and_State_Contracts.pdf`
+- `Topic_07_Local_SLM_Inference_and_Fallbacks.pdf`
+- `Topic_08_Backend_Architecture_FastAPI_and_Worker_Threadpools.pdf`
+- `Topic_09_The_Clinical_Console_UI_and_State_Management.pdf`
+- `Topic_10_Testing_Verification_and_Clinical_Validation.pdf`
+(Copies automatically synchronized with `$HOME/Downloads/`).
 
 ---
 
